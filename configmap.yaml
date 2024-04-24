@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-config
+data:
+  collector.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+    processors:
+      resourcedetection:
+        detectors: [gcp]
+        timeout: 10s
+    exporters:
+      logging:
+      googlecloud:
+      googlemanagedprometheus:
+    service:
+      pipelines:
+        logs:
+          receivers: [otlp]
+          processors: [resourcedetection]
+          exporters: [googlecloud]
+        traces:
+          receivers: [otlp]
+          processors: [resourcedetection]
+          exporters: [googlecloud]
+        metrics:
+          receivers: [otlp]
+          processors: [resourcedetection]
+          exporters: [googlemanagedprometheus]

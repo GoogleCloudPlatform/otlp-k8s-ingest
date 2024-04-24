@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: opentelemetry-collector
+spec:
+  type: ClusterIP
+  selector:
+    app: opentelemetry-collector
+  ports:
+    - name: otel-grpc
+      protocol: TCP
+      port: 4317
+      targetPort: 4317
