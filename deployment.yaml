@@ -14,6 +14,9 @@ spec:
       labels:
         app: opentelemetry-collector
     spec:
+      serviceAccountName: opentelemetry-collector
+      securityContext:
+        {}
       containers:
       - name: opentelemetry-collector
         imagePullPolicy: Always
@@ -23,6 +26,12 @@ spec:
           - "--config=/conf/collector.yaml"
         ports:
           - containerPort: 4317
+        env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
         volumeMounts:
           - name: collector-config
             mountPath: /conf
