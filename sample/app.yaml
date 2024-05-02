@@ -7,9 +7,15 @@
 # https://github.com/GoogleCloudPlatform/opentelemetry-demo
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: opentelemetry-demo
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-adservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-adservice
@@ -32,6 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-cartservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-cartservice
@@ -54,6 +61,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-checkoutservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-checkoutservice
@@ -76,6 +84,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-currencyservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-currencyservice
@@ -98,6 +107,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-emailservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-emailservice
@@ -120,6 +130,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-featureflagservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-featureflagservice
@@ -145,6 +156,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-ffspostgres
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-ffspostgres
@@ -167,6 +179,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-frontend
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-frontend
@@ -189,6 +202,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-frontendproxy
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-frontendproxy
@@ -211,6 +225,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-kafka
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-kafka
@@ -236,6 +251,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-loadgenerator
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-loadgenerator
@@ -258,6 +274,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-paymentservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-paymentservice
@@ -280,6 +297,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-productcatalogservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-productcatalogservice
@@ -302,6 +320,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-quoteservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-quoteservice
@@ -324,6 +343,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-recommendationservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-recommendationservice
@@ -346,6 +366,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-redis
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-redis
@@ -368,6 +389,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opentelemetry-demo-shippingservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-shippingservice
@@ -390,6 +412,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-accountingservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-accountingservice
@@ -426,12 +449,14 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: KAFKA_SERVICE_ADDR
             value: 'opentelemetry-demo-kafka:9092'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -452,6 +477,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-adservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-adservice
@@ -492,6 +518,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: AD_SERVICE_PORT
@@ -499,7 +527,7 @@ spec:
           - name: FEATURE_FLAG_GRPC_SERVICE_ADDR
             value: 'opentelemetry-demo-featureflagservice:50053'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
           - name: OTEL_LOGS_EXPORTER
             value: otlp
           - name: OTEL_RESOURCE_ATTRIBUTES
@@ -512,6 +540,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-cartservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-cartservice
@@ -552,6 +581,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: CART_SERVICE_PORT
@@ -563,7 +594,7 @@ spec:
           - name: REDIS_ADDR
             value: 'opentelemetry-demo-redis:6379'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -584,6 +615,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-checkoutservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-checkoutservice
@@ -624,6 +656,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: CHECKOUT_SERVICE_PORT
@@ -643,7 +677,7 @@ spec:
           - name: KAFKA_SERVICE_ADDR
             value: 'opentelemetry-demo-kafka:9092'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -664,6 +698,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-currencyservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-currencyservice
@@ -704,12 +739,14 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: CURRENCY_SERVICE_PORT
             value: "8080"
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: VERSION
             value: '1.8.0'
           - name: OTEL_RESOURCE_ATTRIBUTES
@@ -724,6 +761,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-emailservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-emailservice
@@ -764,6 +802,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: EMAIL_SERVICE_PORT
@@ -771,7 +811,7 @@ spec:
           - name: APP_ENV
             value: production
           - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318/v1/traces
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318/v1/traces
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -784,6 +824,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-featureflagservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-featureflagservice
@@ -826,6 +867,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: FEATURE_FLAG_SERVICE_PORT
@@ -835,7 +878,7 @@ spec:
           - name: DATABASE_URL
             value: ecto://ffs:ffs@opentelemetry-demo-ffspostgres:5432/ffs
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
             value: grpc
           - name: OTEL_RESOURCE_ATTRIBUTES
@@ -864,6 +907,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-ffspostgres
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-ffspostgres
@@ -904,6 +948,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: POSTGRES_DB
@@ -924,6 +970,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-frauddetectionservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-frauddetectionservice
@@ -960,12 +1007,14 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: KAFKA_SERVICE_ADDR
             value: 'opentelemetry-demo-kafka:9092'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -986,6 +1035,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-frontend
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-frontend
@@ -1026,6 +1076,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: FRONTEND_PORT
@@ -1049,7 +1101,7 @@ spec:
           - name: OTEL_COLLECTOR_HOST
             value: $(OTEL_COLLECTOR_NAME)
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: WEB_OTEL_SERVICE_NAME
             value: frontend-web
           - name: PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
@@ -1072,6 +1124,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-frontendproxy
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-frontendproxy
@@ -1112,6 +1165,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: ENVOY_PORT
@@ -1158,6 +1213,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-kafka
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-kafka
@@ -1200,12 +1256,14 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: KAFKA_ADVERTISED_LISTENERS
             value: PLAINTEXT://opentelemetry-demo-kafka:9092
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
           - name: KAFKA_HEAP_OPTS
             value: -Xmx200M -Xms200M
           - name: OTEL_RESOURCE_ATTRIBUTES
@@ -1224,6 +1282,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-loadgenerator
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-loadgenerator
@@ -1264,6 +1323,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: LOCUST_WEB_PORT
@@ -1283,7 +1344,7 @@ spec:
           - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
             value: python
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1296,6 +1357,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-paymentservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-paymentservice
@@ -1336,12 +1398,14 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: PAYMENT_SERVICE_PORT
             value: "8080"
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1358,6 +1422,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-productcatalogservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-productcatalogservice
@@ -1398,6 +1463,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: PRODUCT_CATALOG_SERVICE_PORT
@@ -1405,7 +1472,7 @@ spec:
           - name: FEATURE_FLAG_GRPC_SERVICE_ADDR
             value: 'opentelemetry-demo-featureflagservice:50053'
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1418,6 +1485,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-quoteservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-quoteservice
@@ -1458,6 +1526,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: QUOTE_SERVICE_PORT
@@ -1465,7 +1535,7 @@ spec:
           - name: OTEL_PHP_AUTOLOAD_ENABLED
             value: "true"
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1482,6 +1552,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-recommendationservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-recommendationservice
@@ -1522,6 +1593,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: RECOMMENDATION_SERVICE_PORT
@@ -1535,7 +1608,7 @@ spec:
           - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
             value: python
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1548,6 +1621,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-redis
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-redis
@@ -1588,6 +1662,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: OTEL_RESOURCE_ATTRIBUTES
@@ -1606,6 +1682,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opentelemetry-demo-shippingservice
+  namespace: opentelemetry-demo
   labels:
 
     opentelemetry.io/name: opentelemetry-demo-shippingservice
@@ -1646,6 +1723,8 @@ spec:
                 fieldPath: metadata.labels['app.kubernetes.io/component']
           - name: OTEL_COLLECTOR_NAME
             value: 'opentelemetry-collector'
+          - name: OTEL_COLLECTOR_NAMESPACE
+            value: 'opentelemetry'
           - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
             value: cumulative
           - name: SHIPPING_SERVICE_PORT
@@ -1653,7 +1732,7 @@ spec:
           - name: QUOTE_SERVICE_ADDR
             value: http://opentelemetry-demo-quoteservice:8080
           - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME):4317/v1/traces
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317/v1/traces
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
@@ -1666,6 +1745,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: opentelemetry-demo
+  namespace: opentelemetry-demo
   labels:
     opentelemetry.io/name: opentelemetry-demo
     app.kubernetes.io/instance: opentelemetry-demo

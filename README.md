@@ -21,6 +21,7 @@ Workload Identity and write logs, traces, and metrics:
 export GCLOUD_PROJECT=<your project id>
 ```
 
+Then run the following to create the service account with the appropriate permissions:
 ```console
 gcloud iam service-accounts create opentelemetry-collector \
     --project=${GCLOUD_PROJECT}
@@ -35,39 +36,30 @@ gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
     --role "roles/cloudtrace.agent"
 gcloud iam service-accounts add-iam-policy-binding opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:${GCLOUD_PROJECT}.svc.id.goog[opentelemetry-demo/opentelemetry-collector]"
+    --member "serviceAccount:${GCLOUD_PROJECT}.svc.id.goog[opentelemetry/opentelemetry-collector]"
 ```
 
 ### Install the manifests
 
 First, make sure you have followed the Workload Identity setup steps above.
-Update [`rbac.yaml`](rbac.yaml) to annotate the Kubernetes service account with
-your project and namespace:
-
-Note: If you don't have a namespace yet you can create one and use it as current
-context like this:
-```console
-kubectl create namespace opentelemetry-demo
-kubectl config set-context --current --namespace opentelemetry-demo
-```
+Update the manifests to annotate the Kubernetes service account with
+your project:
 
 ```console
-export NAMESPACE=opentelemetry-demo
-sed -i "s/%GCLOUD_PROJECT%/${GCLOUD_PROJECT}/g" rbac.yaml
-sed -i "s/%NAMESPACE%/${NAMESPACE}/g" rbac.yaml
+sed -i "s/%GCLOUD_PROJECT%/${GCLOUD_PROJECT}/g" collector/*
 ```
 
 Install the manifests:
 
 ```console
-kubectl apply -n ${NAMESPACE} -f .
+kubectl apply -f collector/.
 ```
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector
 
 To test out and see the deployment in action, you can run the demo OpenTemetry application using
 ```console
-kubectl apply  -f ./examples/opentelemetry-demo/. -n ${NAMESPACE}
+kubectl apply  -f sample/.
 ```
 
 ### See Telemetry in Google Cloud Observability
