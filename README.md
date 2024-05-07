@@ -36,7 +36,8 @@ gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
     --role "roles/cloudtrace.agent"
 gcloud iam service-accounts add-iam-policy-binding opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:${GCLOUD_PROJECT}.svc.id.goog[opentelemetry/opentelemetry-collector]"
+    --member "serviceAccount:${GCLOUD_PROJECT}.svc.id.goog[opentelemetry/opentelemetry-collector]" \
+    --project ${GCLOUD_PROJECT}
 ```
 
 ### Install the manifests
