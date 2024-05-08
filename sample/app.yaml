@@ -1108,8 +1108,6 @@ spec:
             value: http://localhost:8080/otlp-http/v1/traces
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
-          - name: OTEL_COLLECTOR_HOST
-            value: $(OTEL_COLLECTOR_NAME)
           resources:
             limits:
               memory: 200Mi
@@ -1608,7 +1606,7 @@ spec:
           - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
             value: python
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4318
+            value: http://$(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
           - name: OTEL_RESOURCE_ATTRIBUTES
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
