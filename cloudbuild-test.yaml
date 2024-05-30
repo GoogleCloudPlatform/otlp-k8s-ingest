@@ -22,6 +22,16 @@ steps:
   env:
   - 'PROJECT_ID=$PROJECT_ID'
 
+# create a GKE cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: CreateCluster
+  args:
+  - 'container'
+  - 'clusters'
+  - 'create'
+  - '${COMMIT_SHA}'
+  - '--zone=${LOCATION}'
+
 # deploy the manifests in GKE
 - name: 'gcr.io/cloud-builders/kubectl'
   id: Deploy
@@ -31,7 +41,7 @@ steps:
   - './collector/.'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${COMMIT_SHA}'
 
 # assert that all pods are up and running
 - name: 'gcr.io/cloud-builders/kubectl'
@@ -46,28 +56,15 @@ steps:
   - '--all'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${COMMIT_SHA}'
 
-# delete everything in the opentelemetry namespace
-- name: 'gcr.io/cloud-builders/kubectl'
-  id: TearDown
+# delete the GKE cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: DeleteCluster
   args:
+  - 'container'
+  - 'clusters'
   - 'delete'
-  - 'all'
-  - '--all'
-  - '-n'
-  - 'opentelemetry'
-  env:
-  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
-
-# delete the opentelemetry namespace
-- name: 'gcr.io/cloud-builders/kubectl'
-  id: DeleteNamespace
-  args:
-  - 'delete'
-  - 'namespace'
-  - 'opentelemetry'
-  env:
-  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+  - '${COMMIT_SHA}'
+  - '--zone=${LOCATION}'
+  - '--quiet'
