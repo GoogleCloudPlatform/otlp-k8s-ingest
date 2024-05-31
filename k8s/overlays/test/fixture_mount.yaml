@@ -1,0 +1,41 @@
+- path: /kind
+  op: replace
+  value: StatefulSet
+
+- path: /spec/template/spec/volumes/1
+  op: add
+  value:
+    name: test-fixture
+    configMap:
+      name: collector-config
+      items:
+        - key: fixture.json
+          path: fixture.json
+
+- path: /spec/template/spec/volumes/2
+  op: add
+  value:
+    name: output
+    emptyDir: {}
+
+- path: /spec/template/spec/containers/1
+  op: add
+  value:
+    name: filecp
+    image: busybox
+    command: ["sh", "-c", "sleep 36000"]
+    volumeMounts:
+      - name: output
+        mountPath: /output
+
+- path: /spec/template/spec/containers/0/volumeMounts/1
+  op: add
+  value:
+    name: test-fixture
+    mountPath: /test
+
+- path: /spec/template/spec/containers/0/volumeMounts/2
+  op: add
+  value:
+    name: output
+    mountPath: /output

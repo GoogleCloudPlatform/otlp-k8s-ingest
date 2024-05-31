@@ -1,0 +1,17 @@
+receivers:
+  otlpjsonfile:
+    start_at: beginning
+    include:
+      - "/test/fixture.json"
+
+exporters:
+  file:
+    path: /output/output.json
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - otlpjsonfile
+      exporters:
+        - file

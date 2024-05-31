@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: collector-config
+    namespace: opentelemetry
+    behavior: replace
+    files:
+      - collector.yaml
+      - fixture.json
+
+patches:
+  - target:
+      kind: Deployment
+      name: opentelemetry-collector
+      namespace: opentelemetry
+    path: fixture_mount.yaml
