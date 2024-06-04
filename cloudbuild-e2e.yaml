@@ -29,7 +29,7 @@ steps:
   - 'container'
   - 'clusters'
   - 'create'
-  - '${COMMIT_SHA}'
+  - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
 
 - name: 'ubuntu'
@@ -51,6 +51,6 @@ steps:
   - 'container'
   - 'clusters'
   - 'delete'
-  - '${COMMIT_SHA}'
+  - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
   - '--quiet'

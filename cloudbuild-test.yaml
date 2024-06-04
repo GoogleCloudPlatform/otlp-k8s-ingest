@@ -29,7 +29,7 @@ steps:
   - 'container'
   - 'clusters'
   - 'create'
-  - '${COMMIT_SHA}'
+  - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
 
 # deploy the manifests in GKE
@@ -41,7 +41,7 @@ steps:
   - './collector/.'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${COMMIT_SHA}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
 
 # assert that all pods are up and running
 - name: 'gcr.io/cloud-builders/kubectl'
@@ -56,7 +56,7 @@ steps:
   - '--all'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${COMMIT_SHA}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
 
 # delete the GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -65,6 +65,6 @@ steps:
   - 'container'
   - 'clusters'
   - 'delete'
-  - '${COMMIT_SHA}'
+  - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
   - '--quiet'
