@@ -41,6 +41,10 @@ spec:
         volumeMounts:
           - name: collector-config
             mountPath: /conf
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133
       volumes:
           - name: collector-config
             configMap:
