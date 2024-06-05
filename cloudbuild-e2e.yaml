@@ -13,15 +13,6 @@
 # limitations under the License.
 
 steps:
-- name: 'ubuntu'
-  id: Generate test manifests
-  script: |
-    #!/usr/bin/env bash
-    make generate-test
-    sed -i "s/%GCLOUD_PROJECT%/${PROJECT_ID}/g" collector/*
-  env:
-  - 'PROJECT_ID=$PROJECT_ID'
-
 # create a GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: CreateCluster
@@ -36,12 +27,9 @@ steps:
   id: Run test
   script: |
     #!/usr/bin/env bash
+    apt-get update
+    apt-get install -y build-essential curl git
     make test
-
-- name: 'ubuntu'
-  id: Check for diff in expect fixture
-  script: |
-    #!/usr/bin/env bash
     make check-clean-work-tree
 
 # delete the GKE cluster
