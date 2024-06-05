@@ -14,12 +14,39 @@
 
 COLLECTOR_CONTRIB_VERSION=0.99.0
 
+TOOLS = $(CURDIR)/.tools
+
+$(TOOLS):
+	mkdir -p $@
+
+YQ = $(TOOLS)/yq
+$(TOOLS)/yq: $(TOOLS)
+	curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o yq_linux_amd64 && \
+	chmod +x ./yq_linux_amd64 && \
+	mv ./yq_linux_amd64 $(TOOLS)/yq
+
+JQ = $(TOOLS)/jq
+$(TOOLS)/jq: $(TOOLS)
+	curl -L https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64 -o jq-linux-amd64 && \
+	chmod +x ./jq-linux-amd64 && \
+	mv ./jq-linux-amd64 $(TOOLS)/jq
+
+
+KUBECTL = $(TOOLS)/kubectl
+$(TOOLS)/kubectl: $(TOOLS)
+	curl -LO "https://dl.k8s.io/release/$(shell curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+	chmod +x ./kubectl && \
+	mv ./kubectl $(TOOLS)/
+
+.PHONY: tools
+tools: $(JQ) $(YQ) $(KUBECTL)
+
 .PHONY: generate
-generate:
-	kubectl create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
-	yq -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
-	cat test/fixtures/input.json | jq -c > k8s/overlays/test/fixture.json
-	kubectl kustomize k8s/base > collector/collector.yaml
+generate: tools
+	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
+	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
+	cat test/fixtures/input.json | $(JQ) -c > k8s/overlays/test/fixture.json
+	$(KUBECTL) kustomize k8s/base > collector/collector.yaml
 
 .PHONY: generate-test
 generate-test: generate
@@ -27,17 +54,17 @@ generate-test: generate
 
 .PHONY: test
 test: generate-test
-	kubectl apply -f collector/.
+	$(KUBECTL) apply -f collector/.
 	while : ; do \
-		kubectl get pod/opentelemetry-collector-0 -n opentelemetry && break; \
+		$(KUBECTL) get pod/opentelemetry-collector-0 -n opentelemetry && break; \
 		sleep 5; \
 	done
-	kubectl wait --for=condition=Ready --timeout=60s pod/opentelemetry-collector-0 -n opentelemetry
+	$(KUBECTL) wait --for=condition=Ready --timeout=60s pod/opentelemetry-collector-0 -n opentelemetry
 	sleep 5
-	kubectl cp -c filecp opentelemetry/opentelemetry-collector-0:/output/output.json test/fixtures/tmp.json
-	jq . test/fixtures/tmp.json > test/fixtures/expect.json
+	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/output.json test/fixtures/tmp.json
+	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
 	rm test/fixtures/tmp.json
-	kubectl delete -f collector/.
+	$(KUBECTL) delete -f collector/.
 
 .PHONY: check-clean-work-tree
 check-clean-work-tree:
