@@ -38,8 +38,12 @@ $(TOOLS)/kubectl: $(TOOLS)
 	chmod +x ./kubectl && \
 	mv ./kubectl $(TOOLS)/
 
+GCLOUD_AUTH = $(TOOLS)/gcloud-auth
+$(TOOLS)/gcloud-auth: $(TOOLS)
+	apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+
 .PHONY: tools
-tools: $(JQ) $(YQ) $(KUBECTL)
+tools: $(JQ) $(YQ) $(KUBECTL) $(GCLOUD_AUTH)
 
 .PHONY: generate
 generate: tools
@@ -53,8 +57,8 @@ generate-test: generate
 	kubectl kustomize k8s/overlays/test > collector/collector.yaml
 
 .PHONY: test
-test: generate-test
-	$(KUBECTL) apply -f collector/.
+test: tools
+	$(KUBECTL) apply -k k8s/overlays/test
 	while : ; do \
 		$(KUBECTL) get pod/opentelemetry-collector-0 -n opentelemetry && break; \
 		sleep 5; \
@@ -64,7 +68,7 @@ test: generate-test
 	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/output.json test/fixtures/tmp.json
 	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
 	rm test/fixtures/tmp.json
-	$(KUBECTL) delete -f collector/.
+	$(KUBECTL) delete -k k8s/overlays/test
 
 .PHONY: check-clean-work-tree
 check-clean-work-tree:
