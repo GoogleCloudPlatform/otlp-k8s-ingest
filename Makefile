@@ -40,7 +40,7 @@ $(TOOLS)/kubectl: $(TOOLS)
 
 GCLOUD_AUTH = $(TOOLS)/gcloud-auth
 $(TOOLS)/gcloud-auth: $(TOOLS)
-	apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+	#apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
 
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL) $(GCLOUD_AUTH)
@@ -69,6 +69,11 @@ test: tools
 	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
 	rm test/fixtures/tmp.json
 	$(KUBECTL) delete -k k8s/overlays/test
+
+.PHONY: prettify-fixture
+prettify-fixture: tools
+	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
+	rm test/fixtures/tmp.json
 
 .PHONY: check-clean-work-tree
 check-clean-work-tree:

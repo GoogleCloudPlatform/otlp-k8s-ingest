@@ -23,13 +23,63 @@ steps:
   - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
 
+# deploy the manifests in GKE
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Deploy
+  args:
+  - 'apply'
+  - '-k'
+  - './k8s/overlays/test'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# assert that all pods are up and running
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: AssertReady
+  args:
+  - 'wait'
+  - '--for=condition=Ready'
+  - '--timeout=300s'
+  - '-n'
+  - 'opentelemetry'
+  - 'pods'
+  - '--all'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
 - name: 'ubuntu'
-  id: Run test
+  id: Wait for telemetry to be collected
   script: |
     #!/usr/bin/env bash
-    apt-get update
-    apt-get install -y build-essential curl git
-    make test
+    sleep 5
+
+# Copy the telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Copy
+  args:
+  - 'cp'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/output.json'
+  - 'test/fixtures/tmp.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+- name: 'ubuntu'
+  id: Prettify the output for easier diff
+  script: |
+    #!/usr/bin/env bash
+    apt-get update && apt-get install -y build-essential curl
+    make prettify-fixture
+
+- name: 'ubuntu'
+  id: Git diff
+  script: |
+    #!/usr/bin/env bash
+    apt-get update && apt-get install -y build-essential git
     make check-clean-work-tree
 
 # delete the GKE cluster
