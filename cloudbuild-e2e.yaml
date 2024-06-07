@@ -75,12 +75,10 @@ steps:
     apt-get update && apt-get install -y build-essential curl
     make prettify-fixture
 
-- name: 'ubuntu'
-  id: Git diff
-  script: |
-    #!/usr/bin/env bash
-    apt-get update && apt-get install -y build-essential git
-    make check-clean-work-tree
+- name: bats/bats
+  id: Check output
+  args:
+  - 'test/verify.bats'
 
 # delete the GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
