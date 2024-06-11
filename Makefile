@@ -38,23 +38,14 @@ $(TOOLS)/kubectl: $(TOOLS)
 	chmod +x ./kubectl && \
 	mv ./kubectl $(TOOLS)/
 
-GCLOUD_AUTH = $(TOOLS)/gcloud-auth
-$(TOOLS)/gcloud-auth: $(TOOLS)
-	#apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
-
 .PHONY: tools
-tools: $(JQ) $(YQ) $(KUBECTL) $(GCLOUD_AUTH)
+tools: $(JQ) $(YQ) $(KUBECTL)
 
 .PHONY: generate
 generate: tools
 	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
 	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
 	cat test/fixtures/input.json | $(JQ) -c > k8s/overlays/test/fixture.json
-	$(KUBECTL) kustomize k8s/base > collector/collector.yaml
-
-.PHONY: generate-test
-generate-test: generate
-	kubectl kustomize k8s/overlays/test > collector/collector.yaml
 
 .PHONY: test
 test: tools

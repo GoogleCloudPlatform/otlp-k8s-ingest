@@ -52,9 +52,7 @@ manifests used with this config are also updated with `make generate`.
 ### K8s Manifests
 
 Kubernetes manifests are managed by Kustomize resources (and overlays) in the
-[`k8s/` directory](k8s/). For simplicity, these are presented to users as a
-single YAML file [`collector/collector.yaml`](collector/collector.yaml) that is
-generated with `make generate` using Kustomize.
+[`k8s/` directory](k8s/).
 
 Kustomize also manages testing manifests, which add overlays on top of the base
 manifests to do the following:
@@ -64,11 +62,6 @@ manifests to do the following:
 * Mount the file fixtures in the collector deployment
 * Update the collector deployment to a replicaset (for easier access via pod
   name in testing)
-
-This approach allows us to check in a presentable YAML manifest that users can
-deploy immediately without interference from our internal testing
-pipeline. Then, our production and testing manifests can both be deployed with
-the same command: `kubectl apply -f collector/.`.
 
 ## Testing
 
