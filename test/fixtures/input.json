@@ -4,12 +4,6 @@
       "resource": {
         "attributes": [
           {
-            "key": "host.name",
-            "value": {
-              "stringValue": "foo.bar.host"
-            }
-          },
-          {
             "key": "process.command_args",
             "value": {
               "arrayValue": {
