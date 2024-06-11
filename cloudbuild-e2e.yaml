@@ -22,6 +22,7 @@ steps:
   - 'create'
   - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
+  - '--num-nodes=1'
 
 # deploy the manifests in GKE
 - name: 'gcr.io/cloud-builders/kubectl'
