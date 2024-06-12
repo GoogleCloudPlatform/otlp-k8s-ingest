@@ -77,7 +77,7 @@ un-prettified input files into the [`k8s/overlays/test`](k8s/overlays/test)
 directory so that they can be merged into the base ConfigMap and consumed by the
 OTLP JSON file receiver.
 
-To generate the testing manifests, run `make generate-test`.
+To generate the testing manifests, run `make generate`.
 
 ### Running tests
 
