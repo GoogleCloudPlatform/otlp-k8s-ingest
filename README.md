@@ -47,13 +47,13 @@ Update the manifests to annotate the Kubernetes service account with
 your project:
 
 ```console
-sed -i "s/%GCLOUD_PROJECT%/${GCLOUD_PROJECT}/g" collector/*
+sed -i "s/%GCLOUD_PROJECT%/${GCLOUD_PROJECT}/g" k8s/base/*
 ```
 
 Install the manifests:
 
 ```console
-kubectl apply -f collector/.
+kubectl apply -k k8s/base
 ```
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector

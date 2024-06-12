@@ -13,15 +13,6 @@
 # limitations under the License.
 
 steps:
-# set the project ID in the k8s manifest for service account/workload identity
-- name: 'ubuntu'
-  id: Replace
-  script: |
-    #!/usr/bin/env bash
-    sed -i "s/%GCLOUD_PROJECT%/${PROJECT_ID}/g" k8s/base/*
-  env:
-  - 'PROJECT_ID=$PROJECT_ID'
-
 # create a GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: CreateCluster
@@ -31,6 +22,7 @@ steps:
   - 'create'
   - '${TRIGGER_NAME}-${SHORT_SHA}'
   - '--zone=${LOCATION}'
+  - '--num-nodes=1'
 
 # deploy the manifests in GKE
 - name: 'gcr.io/cloud-builders/kubectl'
@@ -38,7 +30,7 @@ steps:
   args:
   - 'apply'
   - '-k'
-  - './k8s/base'
+  - './k8s/overlays/test'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -57,6 +49,37 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+- name: 'ubuntu'
+  id: Wait for telemetry to be collected
+  script: |
+    #!/usr/bin/env bash
+    sleep 5
+
+# Copy the telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Copy
+  args:
+  - 'cp'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/output.json'
+  - 'test/fixtures/tmp.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+- name: 'ubuntu'
+  id: Prettify the output for easier diff
+  script: |
+    #!/usr/bin/env bash
+    apt-get update && apt-get install -y build-essential curl
+    make prettify-fixture
+
+- name: bats/bats
+  id: Check output
+  args:
+  - 'test/verify.bats'
 
 # delete the GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
