@@ -22,6 +22,15 @@ extensions:
   health_check:
     endpoint: ${env:MY_POD_IP}:13133
 processors:
+  filter/self-metrics:
+    metrics:
+      include:
+        match_type: strict
+        metric_names:
+          - otelcol_process_uptime
+          - otelcol_process_memory_rss
+          - otelcol_grpc_io_client_completed_rpcs
+          - otelcol_googlecloudmonitoring_point_count
   batch:
     send_batch_max_size: 200
     send_batch_size: 200
@@ -88,6 +97,14 @@ receivers:
             - http://*
             - https://*
         endpoint: ${env:MY_POD_IP}:4318
+  prometheus/self-metrics:
+    config:
+      scrape_configs:
+        - job_name: otel-self-metrics
+          scrape_interval: 1m
+          static_configs:
+            - targets:
+                - ${env:MY_POD_IP}:8888
   otlpjsonfile:
     start_at: beginning
     include:
@@ -107,7 +124,7 @@ service:
         - batch
       receivers:
         - otlp
-    metrics:
+    metrics/otlp:
       exporters:
         - googlemanagedprometheus
       processors:
@@ -119,6 +136,16 @@ service:
         - batch
       receivers:
         - otlp
+    metrics/self-metrics:
+      exporters:
+        - googlemanagedprometheus
+      processors:
+        - filter/self-metrics
+        - k8sattributes
+        - memory_limiter
+        - resourcedetection
+      receivers:
+        - prometheus/self-metrics
     traces:
       exporters:
         - file
@@ -130,3 +157,6 @@ service:
         - batch
       receivers:
         - otlpjsonfile
+  telemetry:
+    metrics:
+      address: ${env:MY_POD_IP}:8888
