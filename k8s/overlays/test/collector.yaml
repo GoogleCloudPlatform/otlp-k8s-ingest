@@ -62,6 +62,12 @@ processors:
     check_interval: 1s
     limit_percentage: 65
     spike_limit_percentage: 20
+  # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
+  resource/self-metrics:
+    attributes:
+      - action: insert
+        key: k8s.pod.ip
+        value: ${env:MY_POD_IP}
   resource:
     attributes:
       - action: insert
@@ -141,9 +147,12 @@ service:
         - googlemanagedprometheus
       processors:
         - filter/self-metrics
+        - resource/self-metrics
         - k8sattributes
         - memory_limiter
         - resourcedetection
+        - resource
+        - batch
       receivers:
         - prometheus/self-metrics
     traces:
