@@ -25,6 +25,15 @@ data:
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
     processors:
+      filter/self-metrics:
+        metrics:
+          include:
+            match_type: strict
+            metric_names:
+            - otelcol_process_uptime
+            - otelcol_process_memory_rss
+            - otelcol_grpc_io_client_completed_rpcs
+            - otelcol_googlecloudmonitoring_point_count
       batch:
         send_batch_max_size: 200
         send_batch_size: 200
@@ -57,6 +66,14 @@ data:
         check_interval: 1s
         limit_percentage: 65
         spike_limit_percentage: 20
+
+      # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
+      resource/self-metrics:
+        attributes:
+        - action: insert
+          key: k8s.pod.ip
+          value: ${env:MY_POD_IP}
+
       resource:
         attributes:
         - action: insert
@@ -94,6 +111,15 @@ data:
               - http://*
               - https://*
             endpoint: ${env:MY_POD_IP}:4318
+      prometheus/self-metrics:
+        config:
+          scrape_configs:
+          - job_name: otel-self-metrics
+            scrape_interval: 1m
+            static_configs:
+            - targets:
+              - ${env:MY_POD_IP}:8888
+
     service:
       extensions:
       - health_check
@@ -109,7 +135,7 @@ data:
           - batch
           receivers:
           - otlp
-        metrics:
+        metrics/otlp:
           exporters:
           - googlemanagedprometheus
           processors:
@@ -121,6 +147,19 @@ data:
           - batch
           receivers:
           - otlp
+        metrics/self-metrics:
+          exporters:
+          - googlemanagedprometheus
+          processors:
+          - filter/self-metrics
+          - resource/self-metrics
+          - k8sattributes
+          - memory_limiter
+          - resourcedetection
+          - resource
+          - batch
+          receivers:
+          - prometheus/self-metrics
         traces:
           exporters:
           - googlecloud
@@ -132,6 +171,9 @@ data:
           - batch
           receivers:
           - otlp
+      telemetry:
+        metrics:
+          address: ${env:MY_POD_IP}:8888
 kind: ConfigMap
 metadata:
   creationTimestamp: null
