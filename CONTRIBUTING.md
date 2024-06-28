@@ -63,6 +63,14 @@ manifests to do the following:
 * Update the collector deployment to a replicaset (for easier access via pod
   name in testing)
 
+### Versioning
+
+The manifest and collector version being used can be found in the `VERSION`
+file. Do not update this file manually. Instead the following commands to update
+the versions:
+  - To update the collector version run `OTEL_VERSION=<otel version> make update-otel-version`
+  - To update the manifests version run `VERSION=<manifests version> make update-manifests-version`
+
 ## Testing
 
 Fixture-based tests (deterministic input-output diff checking of signals) use
