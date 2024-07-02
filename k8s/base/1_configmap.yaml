@@ -77,10 +77,6 @@ data:
           - action: add_label
             new_label: version
             new_value: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.99.0
-          - action: aggregate_labels
-            aggregation_type: sum
-            label_set:
-            - version
 
       # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
       resource/self-metrics:
