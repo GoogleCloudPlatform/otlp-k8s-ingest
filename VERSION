@@ -1,0 +1,8 @@
+# Do not update this file manually. Instead the following commands to update the
+# versions:
+#
+#  OTEL_VERSION=<otel version> make update-otel-version
+#  VERSION=<manifests version> make update-manifests-version
+
+MANIFESTS_VERSION=0.1.0
+COLLECTOR_CONTRIB_VERSION=0.99.0

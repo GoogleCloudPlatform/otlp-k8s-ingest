@@ -19,7 +19,9 @@ data:
       googlecloud:
         log:
           default_log_name: opentelemetry-collector
+        user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.99.0
       googlemanagedprometheus:
+        user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.99.0
 
     extensions:
       health_check:
@@ -66,6 +68,15 @@ data:
         check_interval: 1s
         limit_percentage: 65
         spike_limit_percentage: 20
+
+      metricstransform/self-metrics:
+        transforms:
+        - action: update
+          include: otelcol_process_uptime
+          operations:
+          - action: add_label
+            new_label: version
+            new_value: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.99.0
 
       # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
       resource/self-metrics:
@@ -152,6 +163,7 @@ data:
           - googlemanagedprometheus
           processors:
           - filter/self-metrics
+          - metricstransform/self-metrics
           - resource/self-metrics
           - k8sattributes
           - memory_limiter

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-COLLECTOR_CONTRIB_VERSION=0.99.0
+include VERSION
 
 TOOLS = $(CURDIR)/.tools
 
@@ -40,6 +40,22 @@ $(TOOLS)/kubectl: $(TOOLS)
 
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL)
+
+OTEL_VERSION?=$(COLLECTOR_CONTRIB_VERSION)
+.PHONY: update-otel-version
+update-otel-version:
+	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" config/*; \
+	sed -i "s|COLLECTOR_CONTRIB_VERSION=[0-9.]\+|COLLECTOR_CONTRIB_VERSION=$(OTEL_VERSION)|g" VERSION; \
+	$(MAKE) generate; \
+	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_VERSION)\"|g" k8s/base/*; \
+	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" k8s/base/*
+
+VERSION?=$(MANIFESTS_VERSION)
+.PHONY: update-manifests-version
+update-manifests-version:
+	sed -i "s|manifests:[0-9.]\+|manifests:$(VERSION)|g" config/*; \
+	sed -i "s|MANIFESTS_VERSION=[0-9.]\+|MANIFESTS_VERSION=$(VERSION)|g" VERSION; \
+	$(MAKE) generate
 
 .PHONY: generate
 generate: tools
