@@ -68,7 +68,6 @@ processors:
     transforms:
       - action: update
         include: otelcol_process_uptime
-        new_name: agent/uptime
         operations:
           - action: add_label
             new_label: version
