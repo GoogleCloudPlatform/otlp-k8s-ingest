@@ -47,6 +47,7 @@ update-otel-version:
 	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" config/*; \
 	sed -i "s|COLLECTOR_CONTRIB_VERSION=[0-9.]\+|COLLECTOR_CONTRIB_VERSION=$(OTEL_VERSION)|g" VERSION; \
 	$(MAKE) generate; \
+	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_VERSION)\"|g" k8s/base/*; \
 	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" k8s/base/*
 
 VERSION?=$(MANIFESTS_VERSION)
