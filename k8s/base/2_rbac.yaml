@@ -18,7 +18,7 @@ metadata:
   name: opentelemetry-collector
   namespace: opentelemetry
   annotations:
-    iam.gke.io/gcp-service-account: "opentelemetry-collector@%GCLOUD_PROJECT%.iam.gserviceaccount.com"
+    iam.gke.io/gcp-service-account: "opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com"
   labels:
     app.kubernetes.io/name: opentelemetry-collector
     app.kubernetes.io/version: "0.99.0"

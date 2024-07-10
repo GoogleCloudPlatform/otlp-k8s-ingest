@@ -43,18 +43,14 @@ gcloud iam service-accounts add-iam-policy-binding opentelemetry-collector@${GCL
 ### Install the manifests
 
 First, make sure you have followed the Workload Identity setup steps above.
-Update the manifests to annotate the Kubernetes service account with
-your project:
+
+Then, apply the Kubernetes manifests directly from this repo:
 
 ```console
-sed -i "s/%GCLOUD_PROJECT%/${GCLOUD_PROJECT}/g" k8s/base/*
+kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/base | envsubst | kubectl apply -f -
 ```
 
-Install the manifests:
-
-```console
-kubectl apply -k k8s/base
-```
+(Remember to set the `GCLOUD_PROJECT` environment variable.)
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector
 
