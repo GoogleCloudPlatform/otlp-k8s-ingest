@@ -64,6 +64,21 @@ kubectl apply  -f sample/.
 Metrics, Log and Traces should be now available in your project in Cloud Observability.
 You can see metrics under "Prometheus Target" in Cloud Monitoring.
 
+### Observability of the OpenTelemetry Collector
+
+In order to monitor the OpenTelemetry collector, you can deploy the dashboards available [here](https://github.com/GoogleCloudPlatform/monitoring-dashboard-samples/tree/master/dashboards/opentelemetry-collector).
+
+You can import these dashboards by navigating to the Google Cloud Console and:
+
+- Navigating to `Monitoring` > `Dashboards`
+- Clicking on the `Sample Library` tab to find all available samples
+- Clicking on the `OpenTelemetry Collector` category from the list
+- Select and import the available dashboards
+
+Once you import and apply the dashboard, you'll see several metrics tracking the uptime of the collector, its memory footprint and the API calls it makes to Cloud Observability:
+
+![OpenTelemetry Collector Dashboard](/dashboard.png "OpenTelemetry Collector Dashboard")
+
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
