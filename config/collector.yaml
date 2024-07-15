@@ -82,11 +82,6 @@ processors:
       key: k8s.pod.ip
       value: ${env:MY_POD_IP}
 
-  resource:
-    attributes:
-    - action: insert
-      from_attribute: k8s.pod.uid
-      key: service.instance.id
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
@@ -138,7 +133,6 @@ service:
       processors:
       - k8sattributes
       - resourcedetection
-      - resource
       - memory_limiter
       - batch
       receivers:
@@ -151,7 +145,6 @@ service:
       - memory_limiter
       - resourcedetection
       - transform/collision
-      - resource
       - batch
       receivers:
       - otlp
@@ -165,7 +158,6 @@ service:
       - k8sattributes
       - memory_limiter
       - resourcedetection
-      - resource
       - batch
       receivers:
       - prometheus/self-metrics
@@ -176,7 +168,6 @@ service:
       - k8sattributes
       - memory_limiter
       - resourcedetection
-      - resource
       - batch
       receivers:
       - otlp
