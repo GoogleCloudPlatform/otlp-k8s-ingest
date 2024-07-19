@@ -35,7 +35,7 @@ spec:
       containers:
       - name: opentelemetry-collector
         imagePullPolicy: Always
-        image: otel/opentelemetry-collector-contrib:0.99.0
+        image: otel/opentelemetry-collector-contrib:0.105.0
         command:
           - "/otelcol-contrib"
           - "--config=/conf/collector.yaml"

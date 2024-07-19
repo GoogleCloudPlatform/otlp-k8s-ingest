@@ -21,7 +21,7 @@ metadata:
     iam.gke.io/gcp-service-account: "opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com"
   labels:
     app.kubernetes.io/name: opentelemetry-collector
-    app.kubernetes.io/version: "0.99.0"
+    app.kubernetes.io/version: "0.105.0"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -30,7 +30,7 @@ metadata:
   namespace: opentelemetry
   labels:
     app.kubernetes.io/name: opentelemetry-collector
-    app.kubernetes.io/version: "0.99.0"
+    app.kubernetes.io/version: "0.105.0"
 rules:
   - apiGroups: [""]
     resources: ["pods", "namespaces", "nodes"]
@@ -48,7 +48,7 @@ metadata:
   name: opentelemetry-collector
   labels:
     app.kubernetes.io/name: opentelemetry-collector
-    app.kubernetes.io/version: "0.99.0"
+    app.kubernetes.io/version: "0.105.0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
