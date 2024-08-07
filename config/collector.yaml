@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# [START opentelemetry_collector_config]
 exporters:
   googlecloud:
     log:
@@ -174,3 +175,4 @@ service:
   telemetry:
     metrics:
       address: ${env:MY_POD_IP}:8888
+# [END opentelemetry_collector_config]
