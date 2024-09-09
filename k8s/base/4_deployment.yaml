@@ -35,10 +35,11 @@ spec:
       containers:
       - name: opentelemetry-collector
         imagePullPolicy: Always
-        image: otel/opentelemetry-collector-contrib:0.105.0
+        image: otel/opentelemetry-collector-contrib:0.106.0
         command:
           - "/otelcol-contrib"
           - "--config=/conf/collector.yaml"
+          - "--feature-gates=exporter.googlemanagedprometheus.intToDouble"
         ports:
           - name: otlp-grpc
             containerPort: 4317
