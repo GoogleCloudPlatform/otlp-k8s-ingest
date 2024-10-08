@@ -36,8 +36,7 @@ spec:
       - name: opentelemetry-collector
         imagePullPolicy: Always
         image: otel/opentelemetry-collector-contrib:0.106.0
-        command:
-          - "/otelcol-contrib"
+        args:
           - "--config=/conf/collector.yaml"
           - "--feature-gates=exporter.googlemanagedprometheus.intToDouble"
         ports:
