@@ -52,6 +52,12 @@ spec:
               fieldRef:
                 apiVersion: v1
                 fieldPath: status.podIP
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "200m"
+          limits:
+            memory: "400Mi"
         volumeMounts:
           - name: collector-config
             mountPath: /conf
