@@ -41,6 +41,7 @@ First, make sure you have followed the Workload Identity setup steps above.
 Then, apply the Kubernetes manifests directly from this repo:
 
 ```console
+export GCP_REGION=<your region>
 kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/base?ref=otlpmetric | envsubst | kubectl apply -f -
 ```
 

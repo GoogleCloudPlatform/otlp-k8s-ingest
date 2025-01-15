@@ -22,6 +22,7 @@ steps:
     #!/usr/bin/env bash
     grep -rlZ GOOGLE_CLOUD_PROJECT k8s/base/. | xargs -0 sed -i "s/\${GOOGLE_CLOUD_PROJECT}/$PROJECT_ID/g"
   env:
+  - 'LOCATION=$LOCATION'
   - 'PROJECT_ID=$PROJECT_ID'
 
 # create a GKE cluster

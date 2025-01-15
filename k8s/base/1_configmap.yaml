@@ -41,8 +41,12 @@ data:
       # This is an auth extension that adds Google Application Default Credentials to http and gRPC requests.
       googleclientauth:
 
-
     processors:
+      resource/gcp_project_id:
+        attributes:
+        - action: insert
+          value: ${GCLOUD_PROJECT}
+          key: gcp.project_id
       # This filter is a standard part of handling the collector's self-observability metrics. Not related to OTLP ingestion.
       filter/self-metrics:
         metrics:
@@ -204,7 +208,15 @@ data:
           processors:
           - k8sattributes
           - memory_limiter
+<<<<<<< HEAD
           - resource/gcp_project_id
+=======
+<<<<<<< HEAD
+          - metricstarttime
+=======
+          - resource/gcp_project_id
+>>>>>>> 9ed4f56 (migrate sample to use otlphttp for metrics)
+>>>>>>> f71b3c3 (migrate sample to use otlphttp for metrics)
           - resourcedetection
           - transform/collision
           - transform/aco-gke
