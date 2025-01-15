@@ -37,8 +37,12 @@ data:
         endpoint: ${env:MY_POD_IP}:13133
       googleclientauth:
 
-
     processors:
+      resource/gcp_project_id:
+        attributes:
+        - action: insert
+          value: ${GCLOUD_PROJECT}
+          key: gcp.project_id
       filter/self-metrics:
         metrics:
           include:
@@ -181,11 +185,15 @@ data:
           - otlp
         metrics/otlp:
           exporters:
-          - googlemanagedprometheus
+          - otlphttp
           processors:
           - k8sattributes
           - memory_limiter
+<<<<<<< HEAD
           - metricstarttime
+=======
+          - resource/gcp_project_id
+>>>>>>> 9ed4f56 (migrate sample to use otlphttp for metrics)
           - resourcedetection
           - transform/collision
           - transform/aco-gke
@@ -194,12 +202,13 @@ data:
           - otlp
         metrics/self-metrics:
           exporters:
-          - googlemanagedprometheus
+          - otlphttp
           processors:
           - filter/self-metrics
           - metricstransform/self-metrics
           - k8sattributes
           - memory_limiter
+          - resource/gcp_project_id
           - resourcedetection
           - batch
           receivers:
