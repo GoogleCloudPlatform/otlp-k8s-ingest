@@ -4,40 +4,30 @@ This project contains Kubernetes manifests for self-deployed OTLP ingest on Kube
 
 ## Running on GKE
 
-The recommended way to add the collector to your deployment is using `kubectl
-apply`. If running on a GKE Autopilot cluster (or any cluster with Workload
-Identity), you must follow the prerequisite steps to set up a Workload
-Identity-enabled service account below. Otherwise, you can skip to the next
-section.
-
-### Workload Identity prequisites
-
-Follow the [Workload Identity
-docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to)
-to set up an IAM service account in your GCP project with permission to use
-Workload Identity and write logs, traces, and metrics:
-
+Before we begin, set required environment variables:
 ```console
 export GCLOUD_PROJECT=<your project id>
+export PROJECT_NUMBER=<your project number>
 ```
 
-Then run the following to create the service account with the appropriate permissions:
+### Configure IAM Permissions
+
+**You can skip this step if you have disabled GKE workload identity in your cluster.**
+
+Follow the [Workload Identity
+docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+to allow the collector's kubernetes service account to write logs, traces, and metrics:
+
 ```console
-gcloud iam service-accounts create opentelemetry-collector \
-    --project=${GCLOUD_PROJECT}
-gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
-    --member "serviceAccount:opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com" \
-    --role "roles/logging.logWriter"
-gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
-    --member "serviceAccount:opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com" \
-    --role "roles/monitoring.metricWriter"
-gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
-    --member "serviceAccount:opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com" \
-    --role "roles/cloudtrace.agent"
-gcloud iam service-accounts add-iam-policy-binding opentelemetry-collector@${GCLOUD_PROJECT}.iam.gserviceaccount.com \
-    --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:${GCLOUD_PROJECT}.svc.id.goog[opentelemetry/opentelemetry-collector]" \
-    --project ${GCLOUD_PROJECT}
+gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+    --role=roles/logging.logWriter \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
+gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+    --role=roles/monitoring.metricWriter \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
+gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+    --role=roles/cloudtrace.agent \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
 ```
 
 ### Install the manifests
