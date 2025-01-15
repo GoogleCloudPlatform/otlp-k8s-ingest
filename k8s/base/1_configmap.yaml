@@ -22,11 +22,23 @@ data:
         user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.106.0
       googlemanagedprometheus:
         user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.106.0
+      otlphttp:
+        encoding: json
+        endpoint: https://telemetry.${GCP_REGION}.rep.googleapis.com
+        auth:
+          authenticator: googleclientauth
 
     extensions:
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
+      googleclientauth:
+
     processors:
+      resource/gcp_project_id:
+        attributes:
+        - action: insert
+          value: ${GCLOUD_PROJECT}
+          key: gcp.project_id
       filter/self-metrics:
         metrics:
           include:
@@ -129,6 +141,7 @@ data:
     service:
       extensions:
       - health_check
+      - googleclientauth
       pipelines:
         logs:
           exporters:
@@ -142,10 +155,11 @@ data:
           - otlp
         metrics/otlp:
           exporters:
-          - googlemanagedprometheus
+          - otlphttp
           processors:
           - k8sattributes
           - memory_limiter
+          - resource/gcp_project_id
           - resourcedetection
           - transform/collision
           - batch
@@ -153,13 +167,14 @@ data:
           - otlp
         metrics/self-metrics:
           exporters:
-          - googlemanagedprometheus
+          - otlphttp
           processors:
           - filter/self-metrics
           - metricstransform/self-metrics
           - resource/self-metrics
           - k8sattributes
           - memory_limiter
+          - resource/gcp_project_id
           - resourcedetection
           - batch
           receivers:
