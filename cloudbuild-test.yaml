@@ -21,6 +21,7 @@ steps:
   script: |
     #!/usr/bin/env bash
     grep -rlZ GOOGLE_CLOUD_PROJECT k8s/base/. | xargs -0 sed -i "s/\${GOOGLE_CLOUD_PROJECT}/$PROJECT_ID/g"
+    grep -rlZ GCP_REGION k8s/base/. | xargs -0 sed -i "s/\${GCP_REGION}/$LOCATION/g"
   env:
   - 'LOCATION=$LOCATION'
   - 'PROJECT_ID=$PROJECT_ID'
