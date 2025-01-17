@@ -13,13 +13,17 @@
 # limitations under the License.
 
 steps:
-# set the project ID in the k8s manifest for service account/workload identity
+# perform environment variable substitution using cloud build-provided env vars.
+# LOCATION and PROJECT_ID are provided by default by cloud build.
+# Users use envsubst to do this in the same step as kubectl apply.
 - name: 'ubuntu'
   id: Replace
   script: |
     #!/usr/bin/env bash
-    sed -i "s/%GCLOUD_PROJECT%/${PROJECT_ID}/g" k8s/base/*
+    grep -rlZ GCLOUD_PROJECT k8s/base/. | xargs -0 sed -i "s/\${GCLOUD_PROJECT}/$PROJECT_ID/g"
+    grep -rlZ GCP_REGION k8s/base/. | xargs -0 sed -i "s/\${GCP_REGION}/$LOCATION/g"
   env:
+  - 'LOCATION=$LOCATION'
   - 'PROJECT_ID=$PROJECT_ID'
 
 # create a GKE cluster
