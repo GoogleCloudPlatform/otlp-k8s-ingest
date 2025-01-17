@@ -13,7 +13,9 @@
 # limitations under the License.
 
 steps:
-# set the project ID in the k8s manifest for service account/workload identity
+# perform environment variable substitution using cloud build-provided env vars.
+# LOCATION and PROJECT_ID are provided by default by cloud build.
+# Users use envsubst to do this in the same step as kubectl apply.
 - name: 'ubuntu'
   id: Replace
   script: |
