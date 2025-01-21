@@ -21,13 +21,16 @@ to allow the collector's kubernetes service account to write logs, traces, and m
 ```console
 gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
     --role=roles/logging.logWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --condition=none
 gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
     --role=roles/monitoring.metricWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --condition=none
 gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
     --role=roles/cloudtrace.agent \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --condition=none
 ```
 
 ### Install the manifests
