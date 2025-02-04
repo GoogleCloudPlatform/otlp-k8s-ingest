@@ -24,7 +24,7 @@ data:
         user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
       otlphttp:
         encoding: json
-        endpoint: https://telemetry.${GCP_REGION}.rep.googleapis.com
+        endpoint: https://telemetry.googleapis.com
         auth:
           authenticator: googleclientauth
 
