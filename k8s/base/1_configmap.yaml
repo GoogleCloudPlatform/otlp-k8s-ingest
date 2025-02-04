@@ -175,6 +175,8 @@ data:
           receivers:
           - otlp
       telemetry:
+        logs:
+          encoding: json
         metrics:
           address: ${env:MY_POD_IP}:8888
 kind: ConfigMap
