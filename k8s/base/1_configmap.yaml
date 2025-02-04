@@ -41,6 +41,9 @@ data:
         send_batch_size: 200
         timeout: 5s
 
+      interval:
+        interval: 5s
+
       k8sattributes:
         extract:
           metadata:
@@ -144,6 +147,7 @@ data:
           exporters:
           - googlemanagedprometheus
           processors:
+          - interval
           - k8sattributes
           - memory_limiter
           - resourcedetection
