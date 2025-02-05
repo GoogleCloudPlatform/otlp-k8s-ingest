@@ -27,7 +27,7 @@ data:
       # The otlp exporter could also be used to send them using OTLP grpc
       otlphttp:
         encoding: json
-        endpoint: https://telemetry.${GCP_REGION}.rep.googleapis.com
+        endpoint: https://telemetry.googleapis.com
         # Use the googleclientauth extension to authenticate with Google credentials
         auth:
           authenticator: googleclientauth
