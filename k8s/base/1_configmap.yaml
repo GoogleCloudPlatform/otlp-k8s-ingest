@@ -99,6 +99,13 @@ data:
           - set(attributes["exported_project_id"], attributes["project_id"])
           - delete_key(attributes, "project_id")
 
+      transform/aco-gke:
+        metric_statements:
+        - context: datapoint
+          statements:
+          - set(attributes["top_level_controller_type"], "deployment") where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
+
     receivers:
       otlp:
         protocols:
@@ -137,6 +144,7 @@ data:
           - memory_limiter
           - resourcedetection
           - transform/collision
+          - transform/aco-gke
           - batch
           receivers:
           - otlp
