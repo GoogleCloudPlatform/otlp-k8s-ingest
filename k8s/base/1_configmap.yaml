@@ -1,7 +1,11 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-config
+  namespace: opentelemetry
 data:
   collector.yaml: |
-    # Copyright 2024 Google LLC
+    # Copyright 2025 Google LLC
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
     # you may not use this file except in compliance with the License.
@@ -19,9 +23,9 @@ data:
       googlecloud:
         log:
           default_log_name: opentelemetry-collector
-        user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
+        user_agent: Google-Cloud-OTLP manifests:0.2.0 otel/opentelemetry-collector-contrib:0.120.0
       googlemanagedprometheus:
-        user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
+        user_agent: Google-Cloud-OTLP manifests:0.2.0 otel/opentelemetry-collector-contrib:0.120.0
 
     extensions:
       health_check:
@@ -76,7 +80,7 @@ data:
           operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
+            new_value: Google-Cloud-OTLP manifests:0.2.0 otel/opentelemetry-collector-contrib:0.120.0
 
       resourcedetection:
         detectors: [gcp]
@@ -172,8 +176,3 @@ data:
                 otlp:
                   protocol: grpc/protobuf
                   endpoint: ${env:MY_POD_IP}:14317
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  name: collector-config
-  namespace: opentelemetry
