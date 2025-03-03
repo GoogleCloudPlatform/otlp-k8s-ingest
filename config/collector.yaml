@@ -75,13 +75,6 @@ processors:
         new_label: version
         new_value: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
 
-  # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
-  resource/self-metrics:
-    attributes:
-    - action: insert
-      key: k8s.pod.ip
-      value: ${env:MY_POD_IP}
-
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
@@ -114,14 +107,10 @@ receivers:
           - http://*
           - https://*
         endpoint: ${env:MY_POD_IP}:4318
-  prometheus/self-metrics:
-    config:
-      scrape_configs:
-      - job_name: otel-self-metrics
-        scrape_interval: 1m
-        static_configs:
-        - targets:
-          - ${env:MY_POD_IP}:8888
+  otlp/self-metrics:
+    protocols:
+      grpc:
+        endpoint: ${env:MY_POD_IP}:14317
 
 service:
   extensions:
@@ -154,13 +143,12 @@ service:
       processors:
       - filter/self-metrics
       - metricstransform/self-metrics
-      - resource/self-metrics
       - k8sattributes
       - memory_limiter
       - resourcedetection
       - batch
       receivers:
-      - prometheus/self-metrics
+      - otlp/self-metrics
     traces:
       exporters:
       - googlecloud
@@ -172,5 +160,12 @@ service:
       receivers:
       - otlp
   telemetry:
+    logs:
+      encoding: json
     metrics:
-      address: ${env:MY_POD_IP}:8888
+      readers:
+      - periodic:
+          exporter:
+            otlp:
+              protocol: grpc/protobuf
+              endpoint: ${env:MY_POD_IP}:14317
