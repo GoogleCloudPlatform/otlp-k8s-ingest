@@ -100,21 +100,26 @@ data:
           - set(attributes["exported_project_id"], attributes["project_id"])
           - delete_key(attributes, "project_id")
 
+      # The relative ordering of statements between ReplicaSet & Deployment and Job & CronJob are important.
+      # The ordering of these controllers is decided based on the k8s controller documentation available at
+      # https://kubernetes.io/docs/concepts/workloads/controllers.
+      # The relative ordering of the other controllers in this list is inconsequential since they directly
+      # create pods.
       transform/aco-gke:
         metric_statements:
         - context: datapoint
           statements:
-          - set(attributes["top_level_controller_type"], "deployment") where resource.attributes["k8s.deployment.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
-          - set(attributes["top_level_controller_type"], "daemonset") where resource.attributes["k8s.daemonset.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.daemonset.name"]) where resource.attributes["k8s.daemonset.name"] != nil
-          - set(attributes["top_level_controller_type"], "statefulset") where resource.attributes["k8s.statefulset.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.statefulset.name"]) where resource.attributes["k8s.statefulset.name"] != nil
-          - set(attributes["top_level_controller_type"], "replicaset") where resource.attributes["k8s.replicaset.name"] != nil
+          - set(attributes["top_level_controller_type"], "ReplicaSet") where resource.attributes["k8s.replicaset.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.replicaset.name"]) where resource.attributes["k8s.replicaset.name"] != nil
-          - set(attributes["top_level_controller_type"], "job") where resource.attributes["k8s.job.name"] != nil
+          - set(attributes["top_level_controller_type"], "Deployment") where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_type"], "DaemonSet") where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.daemonset.name"]) where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_type"], "StatefulSet") where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.statefulset.name"]) where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_type"], "Job") where resource.attributes["k8s.job.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
-          - set(attributes["top_level_controller_type"], "cronjob") where resource.attributes["k8s.cronjob.name"] != nil
+          - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 
     receivers:
