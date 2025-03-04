@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ processors:
         - k8s.daemonset.name
         - k8s.cronjob.name
         - k8s.job.name
+        - k8s.replicaset.name
         - k8s.node.name
         - k8s.pod.name
         - k8s.pod.uid
@@ -72,12 +73,6 @@ processors:
           - action: add_label
             new_label: version
             new_value: Google-Cloud-OTLP manifests:0.2.0 otel/opentelemetry-collector-contrib:0.120.0
-  # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
-  resource/self-metrics:
-    attributes:
-      - action: insert
-        key: k8s.pod.ip
-        value: ${env:MY_POD_IP}
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
@@ -97,6 +92,27 @@ processors:
           - delete_key(attributes, "instance")
           - set(attributes["exported_project_id"], attributes["project_id"])
           - delete_key(attributes, "project_id")
+  # The relative ordering of statements between ReplicaSet & Deployment and Job & CronJob are important.
+  # The ordering of these controllers is decided based on the k8s controller documentation available at
+  # https://kubernetes.io/docs/concepts/workloads/controllers.
+  # The relative ordering of the other controllers in this list is inconsequential since they directly
+  # create pods.
+  transform/aco-gke:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["top_level_controller_type"], "ReplicaSet") where resource.attributes["k8s.replicaset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.replicaset.name"]) where resource.attributes["k8s.replicaset.name"] != nil
+          - set(attributes["top_level_controller_type"], "Deployment") where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_type"], "DaemonSet") where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.daemonset.name"]) where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_type"], "StatefulSet") where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.statefulset.name"]) where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_type"], "Job") where resource.attributes["k8s.job.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
+          - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 receivers:
   otlp:
     protocols:
@@ -108,14 +124,10 @@ receivers:
             - http://*
             - https://*
         endpoint: ${env:MY_POD_IP}:4318
-  prometheus/self-metrics:
-    config:
-      scrape_configs:
-        - job_name: otel-self-metrics
-          scrape_interval: 1m
-          static_configs:
-            - targets:
-                - ${env:MY_POD_IP}:8888
+  otlp/self-metrics:
+    protocols:
+      grpc:
+        endpoint: ${env:MY_POD_IP}:14317
   otlpjsonfile:
     start_at: beginning
     include:
@@ -142,6 +154,7 @@ service:
         - memory_limiter
         - resourcedetection
         - transform/collision
+        - transform/aco-gke
         - batch
       receivers:
         - otlp
@@ -151,13 +164,12 @@ service:
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
-        - resource/self-metrics
         - k8sattributes
         - memory_limiter
         - resourcedetection
         - batch
       receivers:
-        - prometheus/self-metrics
+        - otlp/self-metrics
     traces:
       exporters:
         - file
@@ -169,5 +181,12 @@ service:
       receivers:
         - otlpjsonfile
   telemetry:
+    logs:
+      encoding: json
     metrics:
-      address: ${env:MY_POD_IP}:8888
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: grpc/protobuf
+                endpoint: ${env:MY_POD_IP}:14317
