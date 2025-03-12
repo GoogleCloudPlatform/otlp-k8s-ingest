@@ -16,9 +16,9 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
 
 extensions:
   health_check:
@@ -74,7 +74,7 @@ processors:
       operations:
       - action: add_label
         new_label: version
-        new_value: Google-Cloud-OTLP manifests:0.3.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+        new_value: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
 
   resourcedetection:
     detectors: [gcp]
@@ -191,5 +191,5 @@ service:
       - periodic:
           exporter:
             otlp:
-              protocol: grpc/protobuf
+              protocol: grpc
               endpoint: ${env:MY_POD_IP}:14317
