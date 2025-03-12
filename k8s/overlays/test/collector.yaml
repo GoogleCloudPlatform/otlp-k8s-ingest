@@ -15,9 +15,9 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
   file:
     path: /output/output.json
 extensions:
@@ -72,7 +72,7 @@ processors:
         operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.2.0 google-built-otel/opentelemetry-collector-contrib:0.121.0
+            new_value: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
