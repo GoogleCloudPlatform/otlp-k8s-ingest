@@ -78,7 +78,7 @@ processors:
 
   resourcedetection:
     detectors: [gcp]
-    timeout: 10s
+    timeout: 11s
 
   transform/collision:
     metric_statements:
