@@ -194,7 +194,7 @@ data:
           - periodic:
               exporter:
                 otlp:
-                  protocol: grpc
+                  protocol: grpc/protobuf
                   endpoint: ${env:MY_POD_IP}:14317
 kind: ConfigMap
 metadata:
