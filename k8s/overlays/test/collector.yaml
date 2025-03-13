@@ -188,5 +188,5 @@ service:
         - periodic:
             exporter:
               otlp:
-                protocol: grpc/protobuf
+                protocol: grpc
                 endpoint: ${env:MY_POD_IP}:14317
