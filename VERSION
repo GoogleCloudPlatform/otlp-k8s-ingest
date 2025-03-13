@@ -5,4 +5,4 @@
 #  VERSION=<manifests version> make update-manifests-version
 
 MANIFESTS_VERSION=0.1.0
-COLLECTOR_CONTRIB_VERSION=0.118.0
+COLLECTOR_CONTRIB_VERSION=0.121.0
