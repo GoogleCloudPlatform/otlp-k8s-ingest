@@ -72,6 +72,10 @@ processors:
   # The batch processor is in place to regulate both the number of requests
   # being made and the size of those requests.
   #
+  # The batch size number chosen here, 200, is significant as it is the maximum
+  # size allowed by the Cloud Monitoring timeseries.create request:
+  # https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/create#request-body
+  #
   # Docs:
   # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor
   batch:
