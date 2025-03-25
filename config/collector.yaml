@@ -227,6 +227,13 @@ exporters:
   # Sending custom metrics to Google Cloud Managed Service for Prometheus
   # gives you the best querying experience for the lowest cost.
   #
+  # NOTE: The exporter.googlemanagedprometheus.intToDouble featuregate is 
+  # recommended when using this exporter. If you are using the 
+  # google-built-opentelemetry-collector/otelcol-google image, this featuregate
+  # is enabled by default. If you are using a custom image, enable it by following
+  # this guide:
+  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/featuregate/README.md
+  #
   # Google Cloud Managed Service for Prometheus docs:
   # https://cloud.google.com/stackdriver/docs/managed-prometheus
   #
