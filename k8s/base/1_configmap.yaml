@@ -1,201 +1,139 @@
 apiVersion: v1
 data:
-  collector.yaml: |
-    # Copyright 2024 Google LLC
-    #
-    # Licensed under the Apache License, Version 2.0 (the "License");
-    # you may not use this file except in compliance with the License.
-    # You may obtain a copy of the License at
-    #
-    #     http://www.apache.org/licenses/LICENSE-2.0
-    #
-    # Unless required by applicable law or agreed to in writing, software
-    # distributed under the License is distributed on an "AS IS" BASIS,
-    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    # See the License for the specific language governing permissions and
-    # limitations under the License.
-
-    exporters:
-      googlecloud:
-        log:
-          default_log_name: opentelemetry-collector
-        user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
-      googlemanagedprometheus:
-        user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
-
-    extensions:
-      health_check:
-        endpoint: ${env:MY_POD_IP}:13133
-    processors:
-      filter/self-metrics:
-        metrics:
-          include:
-            match_type: strict
-            metric_names:
-            - otelcol_process_uptime
-            - otelcol_process_memory_rss
-            - otelcol_grpc_io_client_completed_rpcs
-            - otelcol_googlecloudmonitoring_point_count
-      batch:
-        send_batch_max_size: 200
-        send_batch_size: 200
-        timeout: 5s
-
-      k8sattributes:
-        extract:
-          metadata:
-          - k8s.namespace.name
-          - k8s.deployment.name
-          - k8s.statefulset.name
-          - k8s.daemonset.name
-          - k8s.cronjob.name
-          - k8s.job.name
-          - k8s.replicaset.name
-          - k8s.node.name
-          - k8s.pod.name
-          - k8s.pod.uid
-          - k8s.pod.start_time
-        passthrough: false
-        pod_association:
-        - sources:
-          - from: resource_attribute
-            name: k8s.pod.ip
-        - sources:
-          - from: resource_attribute
-            name: k8s.pod.uid
-        - sources:
-          - from: connection
-      memory_limiter:
-        check_interval: 1s
-        limit_percentage: 65
-        spike_limit_percentage: 20
-
-      metricstransform/self-metrics:
-        transforms:
-        - action: update
-          include: otelcol_process_uptime
-          operations:
-          - action: add_label
-            new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
-
-      resourcedetection:
-        detectors: [gcp]
-        timeout: 10s
-
-      transform/collision:
-        metric_statements:
-        - context: datapoint
-          statements:
-          - set(attributes["exported_location"], attributes["location"])
-          - delete_key(attributes, "location")
-          - set(attributes["exported_cluster"], attributes["cluster"])
-          - delete_key(attributes, "cluster")
-          - set(attributes["exported_namespace"], attributes["namespace"])
-          - delete_key(attributes, "namespace")
-          - set(attributes["exported_job"], attributes["job"])
-          - delete_key(attributes, "job")
-          - set(attributes["exported_instance"], attributes["instance"])
-          - delete_key(attributes, "instance")
-          - set(attributes["exported_project_id"], attributes["project_id"])
-          - delete_key(attributes, "project_id")
-
-      # The relative ordering of statements between ReplicaSet & Deployment and Job & CronJob are important.
-      # The ordering of these controllers is decided based on the k8s controller documentation available at
-      # https://kubernetes.io/docs/concepts/workloads/controllers.
-      # The relative ordering of the other controllers in this list is inconsequential since they directly
-      # create pods.
-      transform/aco-gke:
-        metric_statements:
-        - context: datapoint
-          statements:
-          - set(attributes["top_level_controller_type"], "ReplicaSet") where resource.attributes["k8s.replicaset.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.replicaset.name"]) where resource.attributes["k8s.replicaset.name"] != nil
-          - set(attributes["top_level_controller_type"], "Deployment") where resource.attributes["k8s.deployment.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
-          - set(attributes["top_level_controller_type"], "DaemonSet") where resource.attributes["k8s.daemonset.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.daemonset.name"]) where resource.attributes["k8s.daemonset.name"] != nil
-          - set(attributes["top_level_controller_type"], "StatefulSet") where resource.attributes["k8s.statefulset.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.statefulset.name"]) where resource.attributes["k8s.statefulset.name"] != nil
-          - set(attributes["top_level_controller_type"], "Job") where resource.attributes["k8s.job.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
-          - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
-          - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
-
-    receivers:
-      otlp:
-        protocols:
-          grpc:
-            endpoint: ${env:MY_POD_IP}:4317
-          http:
-            cors:
-              allowed_origins:
-              - http://*
-              - https://*
-            endpoint: ${env:MY_POD_IP}:4318
-      otlp/self-metrics:
-        protocols:
-          grpc:
-            endpoint: ${env:MY_POD_IP}:14317
-
-    service:
-      extensions:
-      - health_check
-      pipelines:
-        logs:
-          exporters:
-          - googlecloud
-          processors:
-          - k8sattributes
-          - resourcedetection
-          - memory_limiter
-          - batch
-          receivers:
-          - otlp
-        metrics/otlp:
-          exporters:
-          - googlemanagedprometheus
-          processors:
-          - k8sattributes
-          - memory_limiter
-          - resourcedetection
-          - transform/collision
-          - transform/aco-gke
-          - batch
-          receivers:
-          - otlp
-        metrics/self-metrics:
-          exporters:
-          - googlemanagedprometheus
-          processors:
-          - filter/self-metrics
-          - metricstransform/self-metrics
-          - k8sattributes
-          - memory_limiter
-          - resourcedetection
-          - batch
-          receivers:
-          - otlp/self-metrics
-        traces:
-          exporters:
-          - googlecloud
-          processors:
-          - k8sattributes
-          - memory_limiter
-          - resourcedetection
-          - batch
-          receivers:
-          - otlp
-      telemetry:
-        logs:
-          encoding: json
-        metrics:
-          readers:
-          - periodic:
-              exporter:
-                otlp:
-                  protocol: grpc
-                  endpoint: ${env:MY_POD_IP}:14317
+  collector.yaml: "# Copyright 2024 Google LLC\n#\n# Licensed under the Apache License,
+    Version 2.0 (the \"License\");\n# you may not use this file except in compliance
+    with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n#
+    Unless required by applicable law or agreed to in writing, software\n# distributed
+    under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES
+    OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the
+    specific language governing permissions and\n# limitations under the License.\n\nreceivers:\n
+    \ # Open two OTLP servers:\n  # - On port 4317, open an OTLP GRPC server\n  #
+    - On port 4318, open an OTLP HTTP server\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver\n
+    \ otlp:\n    protocols:\n      grpc:\n        endpoint: ${env:MY_POD_IP}:4317\n
+    \     http:\n        cors:\n          allowed_origins:\n          - http://*\n
+    \         - https://*\n        endpoint: ${env:MY_POD_IP}:4318\n\n  # Open an
+    OTLP server on port 14317 that will receive self-metrics from\n  # the collector
+    itself.\n  # See service::telemetry::metrics for more information about OTLP self-metrics.\n
+    \ #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver\n
+    \ otlp/self-metrics:\n    protocols:\n      grpc:\n        endpoint: ${env:MY_POD_IP}:14317\n\nextensions:\n
+    \ # Opens an endpoint on 13133 that can be used to check the\n  # status of the
+    collector. Since this does not configure the\n  # `path` config value, the endpoint
+    will default to `/`.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/healthcheckextension\n
+    \ health_check:\n    endpoint: ${env:MY_POD_IP}:13133\n\nprocessors:\n  # Filters
+    out most of the self-metrics produced by the collector.\n  # If you would like
+    more information, you can add them here or\n  # you can remove this processor
+    if you want all available collector\n  # self metrics.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/filterprocessor\n
+    \ filter/self-metrics:\n    metrics:\n      include:\n        match_type: strict\n
+    \       metric_names:\n        - otelcol_process_uptime\n        - otelcol_process_memory_rss\n
+    \       - otelcol_grpc_io_client_completed_rpcs\n        - otelcol_googlecloudmonitoring_point_count\n\n
+    \ # The batch processor is in place to regulate both the number of requests\n
+    \ # being made and the size of those requests.\n  #\n  # The batch size number
+    chosen here, 200, is significant as it is the maximum\n  # size allowed by the
+    Cloud Monitoring timeseries.create request:\n  # https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/create#request-body\n
+    \ #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor\n
+    \ batch:\n    send_batch_max_size: 200\n    send_batch_size: 200\n    timeout:
+    5s\n\n  # The k8sattributes processor will fetch Kubernetes metadata and attach\n
+    \ # the metadata as resource attributes on your telemetry. This is important\n
+    \ # for proper relation between telemetry and k8s resources.\n  #\n  # Docs:\n
+    \ # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/k8sattributesprocessor\n
+    \ k8sattributes:\n    extract:\n      metadata:\n      - k8s.namespace.name\n
+    \     - k8s.deployment.name\n      - k8s.statefulset.name\n      - k8s.daemonset.name\n
+    \     - k8s.cronjob.name\n      - k8s.job.name\n      - k8s.replicaset.name\n
+    \     - k8s.node.name\n      - k8s.pod.name\n      - k8s.pod.uid\n      - k8s.pod.start_time\n
+    \   passthrough: false\n    pod_association:\n    - sources:\n      - from: resource_attribute\n
+    \       name: k8s.pod.ip\n    - sources:\n      - from: resource_attribute\n        name:
+    k8s.pod.uid\n    - sources:\n      - from: connection\n\n  # The memorylimiter
+    will check the memory usage of the collector process.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/memorylimiterprocessor\n
+    \ memory_limiter:\n    check_interval: 1s\n    limit_percentage: 65\n    spike_limit_percentage:
+    20\n\n  # Transforms the uptime metric to include a version label. This allows
+    you\n  # to track the versions of your deployments.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/metricstransformprocessor\n
+    \ metricstransform/self-metrics:\n    transforms:\n    - action: update\n      include:
+    otelcol_process_uptime\n      operations:\n      - action: add_label\n        new_label:
+    version\n        new_value: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector
+    Built By Google/0.121.0 (linux/amd64)\n\n  # The resourcedetection processor is
+    configured to detect GCP resources.\n  # Resource attributes that represent the
+    GCP resource the collector is\n  # running on will be attached to all telemetry
+    that goes through this\n  # processor.\n  #\n  # This processor is required in
+    all pipelines sending data to Google Cloud.\n  # Without it, data will not be
+    associated with particular resources which\n  # can cause issues finding and correlating
+    the data and can lead to errors\n  # sending telemetry. Ensure all pipelines include
+    this processor.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor\n
+    \ # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#gcp-metadata\n
+    \ resourcedetection:\n    detectors: [gcp]\n    timeout: 10s\n\n  # The transform/collision
+    processor ensures that any attributes that may\n  # collide with the googlemanagedprometheus
+    exporter's monitored resource\n  # construction are moved to a similar name that
+    is not reserved.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor\n
+    \ transform/collision:\n    metric_statements:\n    - context: datapoint\n      statements:\n
+    \     - set(attributes[\"exported_location\"], attributes[\"location\"])\n      -
+    delete_key(attributes, \"location\")\n      - set(attributes[\"exported_cluster\"],
+    attributes[\"cluster\"])\n      - delete_key(attributes, \"cluster\")\n      -
+    set(attributes[\"exported_namespace\"], attributes[\"namespace\"])\n      - delete_key(attributes,
+    \"namespace\")\n      - set(attributes[\"exported_job\"], attributes[\"job\"])\n
+    \     - delete_key(attributes, \"job\")\n      - set(attributes[\"exported_instance\"],
+    attributes[\"instance\"])\n      - delete_key(attributes, \"instance\")\n      -
+    set(attributes[\"exported_project_id\"], attributes[\"project_id\"])\n      -
+    delete_key(attributes, \"project_id\")\n\n  # The relative ordering of statements
+    between ReplicaSet & Deployment and Job & CronJob are important.\n  # The ordering
+    of these controllers is decided based on the k8s controller documentation available
+    at\n  # https://kubernetes.io/docs/concepts/workloads/controllers.\n  # The relative
+    ordering of the other controllers in this list is inconsequential since they directly\n
+    \ # create pods.\n  #\n  # Docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor\n
+    \ transform/aco-gke:\n    metric_statements:\n    - context: datapoint\n      statements:\n
+    \     - set(attributes[\"top_level_controller_type\"], \"ReplicaSet\") where resource.attributes[\"k8s.replicaset.name\"]
+    != nil\n      - set(attributes[\"top_level_controller_name\"], resource.attributes[\"k8s.replicaset.name\"])
+    where resource.attributes[\"k8s.replicaset.name\"] != nil\n      - set(attributes[\"top_level_controller_type\"],
+    \"Deployment\") where resource.attributes[\"k8s.deployment.name\"] != nil\n      -
+    set(attributes[\"top_level_controller_name\"], resource.attributes[\"k8s.deployment.name\"])
+    where resource.attributes[\"k8s.deployment.name\"] != nil\n      - set(attributes[\"top_level_controller_type\"],
+    \"DaemonSet\") where resource.attributes[\"k8s.daemonset.name\"] != nil\n      -
+    set(attributes[\"top_level_controller_name\"], resource.attributes[\"k8s.daemonset.name\"])
+    where resource.attributes[\"k8s.daemonset.name\"] != nil\n      - set(attributes[\"top_level_controller_type\"],
+    \"StatefulSet\") where resource.attributes[\"k8s.statefulset.name\"] != nil\n
+    \     - set(attributes[\"top_level_controller_name\"], resource.attributes[\"k8s.statefulset.name\"])
+    where resource.attributes[\"k8s.statefulset.name\"] != nil\n      - set(attributes[\"top_level_controller_type\"],
+    \"Job\") where resource.attributes[\"k8s.job.name\"] != nil\n      - set(attributes[\"top_level_controller_name\"],
+    resource.attributes[\"k8s.job.name\"]) where resource.attributes[\"k8s.job.name\"]
+    != nil\n      - set(attributes[\"top_level_controller_type\"], \"CronJob\") where
+    resource.attributes[\"k8s.cronjob.name\"] != nil\n      - set(attributes[\"top_level_controller_name\"],
+    resource.attributes[\"k8s.cronjob.name\"]) where resource.attributes[\"k8s.cronjob.name\"]
+    != nil\n\nexporters:\n  # The googlecloud exporter will export telemetry to different\n
+    \ # Google Cloud services:\n  # Logs -> Cloud Logging\n  # Traces -> Cloud Trace\n
+    \ # Metrics -> Cloud Monitoring (but it is recommended to use the googlemanagedprometheus
+    exporter for metrics)\n  #\n  # Google Cloud docs:\n  # https://cloud.google.com/logging/docs\n
+    \ # https://cloud.google.com/trace/docs\n  #\n  # Exporter docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter\n
+    \ googlecloud:\n    log:\n      default_log_name: opentelemetry-collector\n    user_agent:
+    Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0
+    (linux/amd64)\n\n  # The googlemanagedprometheus exporter will send metrics to\n
+    \ # Google Cloud Managed Service for Prometheus.\n  #\n  # It is encouraged that
+    metrics are sent through this exporter.\n  # Sending custom metrics to Google
+    Cloud Managed Service for Prometheus\n  # gives you the best querying experience
+    for the lowest cost.\n  #\n  # NOTE: The exporter.googlemanagedprometheus.intToDouble
+    featuregate is \n  # recommended when using this exporter. If you are using the
+    \n  # google-built-opentelemetry-collector/otelcol-google image, this featuregate\n
+    \ # is enabled by default. If you are using a custom image, enable it by following\n
+    \ # this guide:\n  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/featuregate/README.md\n
+    \ #\n  # Google Cloud Managed Service for Prometheus docs:\n  # https://cloud.google.com/stackdriver/docs/managed-prometheus\n
+    \ #\n  # Exporter docs:\n  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter\n
+    \ googlemanagedprometheus:\n    user_agent: Google-Cloud-OTLP manifests:0.2.0
+    OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)\n\nservice:\n  extensions:\n
+    \ - health_check\n  pipelines:\n    logs:\n      exporters:\n      - googlecloud\n
+    \     processors:\n      - k8sattributes\n      - resourcedetection\n      - memory_limiter\n
+    \     - batch\n      receivers:\n      - otlp\n    metrics/otlp:\n      exporters:\n
+    \     - googlemanagedprometheus\n      processors:\n      - k8sattributes\n      -
+    memory_limiter\n      - resourcedetection\n      - transform/collision\n      -
+    transform/aco-gke\n      - batch\n      receivers:\n      - otlp\n    metrics/self-metrics:\n
+    \     exporters:\n      - googlemanagedprometheus\n      processors:\n      -
+    filter/self-metrics\n      - metricstransform/self-metrics\n      - k8sattributes\n
+    \     - memory_limiter\n      - resourcedetection\n      - batch\n      receivers:\n
+    \     - otlp/self-metrics\n    traces:\n      exporters:\n      - googlecloud\n
+    \     processors:\n      - k8sattributes\n      - memory_limiter\n      - resourcedetection\n
+    \     - batch\n      receivers:\n      - otlp\n  telemetry:\n    # Changing the
+    log encoding to json makes it so\n    # GKE's default log collection can recognize
+    and\n    # structured data and severity from the Collector's\n    # self-logs.\n
+    \   logs:\n      encoding: json\n    metrics:\n      # This reader will periodically
+    sample the Collector's\n      # tracked self-metrics and export them to the configured\n
+    \     # otlp receiver.\n      readers:\n      - periodic:\n          exporter:\n
+    \           otlp:\n              protocol: grpc\n              endpoint: ${env:MY_POD_IP}:14317\n"
 kind: ConfigMap
 metadata:
   creationTimestamp: null

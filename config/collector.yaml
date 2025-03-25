@@ -12,18 +12,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exporters:
-  googlecloud:
-    log:
-      default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
-  googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
+receivers:
+  # Open two OTLP servers:
+  # - On port 4317, open an OTLP GRPC server
+  # - On port 4318, open an OTLP HTTP server
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:MY_POD_IP}:4317
+      http:
+        cors:
+          allowed_origins:
+          - http://*
+          - https://*
+        endpoint: ${env:MY_POD_IP}:4318
+
+  # Open an OTLP server on port 14317 that will receive self-metrics from
+  # the collector itself.
+  # See service::telemetry::metrics for more information about OTLP self-metrics.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver
+  otlp/self-metrics:
+    protocols:
+      grpc:
+        endpoint: ${env:MY_POD_IP}:14317
 
 extensions:
+  # Opens an endpoint on 13133 that can be used to check the
+  # status of the collector. Since this does not configure the
+  # `path` config value, the endpoint will default to `/`.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/healthcheckextension
   health_check:
     endpoint: ${env:MY_POD_IP}:13133
+
 processors:
+  # Filters out most of the self-metrics produced by the collector.
+  # If you would like more information, you can add them here or
+  # you can remove this processor if you want all available collector
+  # self metrics.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/filterprocessor
   filter/self-metrics:
     metrics:
       include:
@@ -33,11 +68,27 @@ processors:
         - otelcol_process_memory_rss
         - otelcol_grpc_io_client_completed_rpcs
         - otelcol_googlecloudmonitoring_point_count
+
+  # The batch processor is in place to regulate both the number of requests
+  # being made and the size of those requests.
+  #
+  # The batch size number chosen here, 200, is significant as it is the maximum
+  # size allowed by the Cloud Monitoring timeseries.create request:
+  # https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/create#request-body
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor
   batch:
     send_batch_max_size: 200
     send_batch_size: 200
     timeout: 5s
 
+  # The k8sattributes processor will fetch Kubernetes metadata and attach
+  # the metadata as resource attributes on your telemetry. This is important
+  # for proper relation between telemetry and k8s resources.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/k8sattributesprocessor
   k8sattributes:
     extract:
       metadata:
@@ -62,11 +113,21 @@ processors:
         name: k8s.pod.uid
     - sources:
       - from: connection
+
+  # The memorylimiter will check the memory usage of the collector process.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/memorylimiterprocessor
   memory_limiter:
     check_interval: 1s
     limit_percentage: 65
     spike_limit_percentage: 20
 
+  # Transforms the uptime metric to include a version label. This allows you
+  # to track the versions of your deployments.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/metricstransformprocessor
   metricstransform/self-metrics:
     transforms:
     - action: update
@@ -76,10 +137,29 @@ processors:
         new_label: version
         new_value: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
 
+  # The resourcedetection processor is configured to detect GCP resources.
+  # Resource attributes that represent the GCP resource the collector is
+  # running on will be attached to all telemetry that goes through this
+  # processor.
+  #
+  # This processor is required in all pipelines sending data to Google Cloud.
+  # Without it, data will not be associated with particular resources which
+  # can cause issues finding and correlating the data and can lead to errors
+  # sending telemetry. Ensure all pipelines include this processor.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#gcp-metadata
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
 
+  # The transform/collision processor ensures that any attributes that may
+  # collide with the googlemanagedprometheus exporter's monitored resource
+  # construction are moved to a similar name that is not reserved.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
   transform/collision:
     metric_statements:
     - context: datapoint
@@ -102,6 +182,9 @@ processors:
   # https://kubernetes.io/docs/concepts/workloads/controllers.
   # The relative ordering of the other controllers in this list is inconsequential since they directly
   # create pods.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
   transform/aco-gke:
     metric_statements:
     - context: datapoint
@@ -119,21 +202,45 @@ processors:
       - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
       - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: ${env:MY_POD_IP}:4317
-      http:
-        cors:
-          allowed_origins:
-          - http://*
-          - https://*
-        endpoint: ${env:MY_POD_IP}:4318
-  otlp/self-metrics:
-    protocols:
-      grpc:
-        endpoint: ${env:MY_POD_IP}:14317
+exporters:
+  # The googlecloud exporter will export telemetry to different
+  # Google Cloud services:
+  # Logs -> Cloud Logging
+  # Traces -> Cloud Trace
+  # Metrics -> Cloud Monitoring (but it is recommended to use the googlemanagedprometheus exporter for metrics)
+  #
+  # Google Cloud docs:
+  # https://cloud.google.com/logging/docs
+  # https://cloud.google.com/trace/docs
+  #
+  # Exporter docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlecloudexporter
+  googlecloud:
+    log:
+      default_log_name: opentelemetry-collector
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
+
+  # The googlemanagedprometheus exporter will send metrics to
+  # Google Cloud Managed Service for Prometheus.
+  #
+  # It is encouraged that metrics are sent through this exporter.
+  # Sending custom metrics to Google Cloud Managed Service for Prometheus
+  # gives you the best querying experience for the lowest cost.
+  #
+  # NOTE: The exporter.googlemanagedprometheus.intToDouble featuregate is 
+  # recommended when using this exporter. If you are using the 
+  # google-built-opentelemetry-collector/otelcol-google image, this featuregate
+  # is enabled by default. If you are using a custom image, enable it by following
+  # this guide:
+  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/featuregate/README.md
+  #
+  # Google Cloud Managed Service for Prometheus docs:
+  # https://cloud.google.com/stackdriver/docs/managed-prometheus
+  #
+  # Exporter docs:
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter
+  googlemanagedprometheus:
+    user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
 
 service:
   extensions:
@@ -184,9 +291,16 @@ service:
       receivers:
       - otlp
   telemetry:
+    # Changing the log encoding to json makes it so
+    # GKE's default log collection can recognize and
+    # structured data and severity from the Collector's
+    # self-logs.
     logs:
       encoding: json
     metrics:
+      # This reader will periodically sample the Collector's
+      # tracked self-metrics and export them to the configured
+      # otlp receiver.
       readers:
       - periodic:
           exporter:
