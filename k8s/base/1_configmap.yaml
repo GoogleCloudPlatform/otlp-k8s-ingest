@@ -35,6 +35,8 @@ data:
     extensions:
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
+
+
     processors:
       filter/self-metrics:
         metrics:
@@ -74,6 +76,7 @@ data:
             name: k8s.pod.uid
         - sources:
           - from: connection
+
       memory_limiter:
         check_interval: 1s
         limit_percentage: 65
@@ -132,12 +135,13 @@ data:
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 
     # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
-    resource/gcp_project_id:
+      resource/gcp_project_id:
         attributes:
         - action: insert
           # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
-          value: ${GCLOUD_PROJECT}
+          value: ${PROJECT_ID}
           key: gcp.project_id
+
 
     receivers:
       otlp:

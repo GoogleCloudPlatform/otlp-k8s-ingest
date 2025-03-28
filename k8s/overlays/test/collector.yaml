@@ -121,13 +121,13 @@ processors:
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
           - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
-# When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
-resource/gcp_project_id:
-  attributes:
-    - action: insert
-      # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
-      value: ${GCLOUD_PROJECT}
-      key: gcp.project_id
+          # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
+  resource/gcp_project_id:
+    attributes:
+      - action: insert
+        # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
+        value: ${PROJECT_ID}
+        key: gcp.project_id
 receivers:
   otlp:
     protocols:
