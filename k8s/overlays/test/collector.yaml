@@ -124,10 +124,10 @@ processors:
           # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
   resource/gcp_project_id:
     attributes:
-      - action: insert
+      - key: gcp.project_id
         # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
         value: ${PROJECT_ID}
-        key: gcp.project_id
+        action: insert
 receivers:
   otlp:
     protocols:
