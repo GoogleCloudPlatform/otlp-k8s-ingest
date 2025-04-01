@@ -13,7 +13,7 @@
 # limitations under the License.
 
 steps:
-# set the project ID in the k8s manifest for OTLP ingestion
+# set the project ID in the k8s manifest for OTLP export
 - name: 'ubuntu'
   id: Replace
   script: |
