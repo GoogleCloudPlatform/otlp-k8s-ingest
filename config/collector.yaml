@@ -137,7 +137,7 @@ processors:
     attributes:
     - key: gcp.project_id
       # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
-      value: ${PROJECT_ID}
+      value: ${GCLOUD_PROJECT}
       action: insert
 
 
