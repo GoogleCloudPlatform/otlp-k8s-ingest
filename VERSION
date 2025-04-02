@@ -1,8 +1,10 @@
 # Do not update this file manually. Instead the following commands to update the
 # versions:
 #
-#  OTEL_VERSION=<otel version> make update-otel-version
+#  OTEL_COLLECTOR_VERSION=<otel collector version> make update-otel-version
 #  VERSION=<manifests version> make update-manifests-version
+#
+# Note: The manifests in these repositories use the Google Built OpenTelemetry Collector.
 
 MANIFESTS_VERSION=0.3.0
-COLLECTOR_CONTRIB_VERSION=0.121.0
+GBOC_VERSION=0.121.0
