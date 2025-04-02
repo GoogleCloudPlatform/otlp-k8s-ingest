@@ -41,7 +41,7 @@ $(TOOLS)/kubectl: $(TOOLS)
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL)
 
-OTEL_COLLECTOR_VERSION?=$(GBOC_VERSION)
+OTEL_COLLECTOR_VERSION ?= $(GBOC_VERSION)
 .PHONY: update-otel-version
 update-otel-version:
 	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" config/*; \
@@ -51,7 +51,7 @@ update-otel-version:
 	sed -i "s|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:[0-9.]\+|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*; \
 	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*;
 
-VERSION?=$(MANIFESTS_VERSION)
+VERSION ?= $(MANIFESTS_VERSION)
 .PHONY: update-manifests-version
 update-manifests-version:
 	sed -i "s|manifests:[0-9.]\+|manifests:$(VERSION)|g" config/*; \
