@@ -127,7 +127,7 @@ processors:
     attributes:
       - key: gcp.project_id
         # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
-        value: ${GCLOUD_PROJECT}
+        value: ${GOOGLE_CLOUD_PROJECT}
         action: insert
 receivers:
   otlp:

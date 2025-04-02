@@ -18,7 +18,7 @@ steps:
   id: Replace
   script: |
     #!/usr/bin/env bash
-    sed -i "s/\${GCLOUD_PROJECT}/${PROJECT_ID}/g" k8s/overlays/test/*
+    sed -i "s/\${GOOGLE_CLOUD_PROJECT}/${PROJECT_ID}/g" k8s/overlays/test/*
   env:
   - 'PROJECT_ID=$PROJECT_ID'
 
