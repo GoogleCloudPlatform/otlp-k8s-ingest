@@ -19,13 +19,25 @@ data:
       googlecloud:
         log:
           default_log_name: opentelemetry-collector
-        user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
+        user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
       googlemanagedprometheus:
-        user_agent: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
+        user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
+      # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
+      # The otlp exporter could also be used to send them using OTLP grpc
+      otlphttp:
+        encoding: proto
+        endpoint: https://telemetry.googleapis.com
+        # Use the googleclientauth extension to authenticate with Google credentials
+        auth:
+          authenticator: googleclientauth
+
 
     extensions:
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
+      googleclientauth:
+
+
     processors:
       filter/self-metrics:
         metrics:
@@ -65,6 +77,7 @@ data:
             name: k8s.pod.uid
         - sources:
           - from: connection
+
       memory_limiter:
         check_interval: 1s
         limit_percentage: 65
@@ -77,7 +90,7 @@ data:
           operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.2.0 OpenTelemetry Collector Built By Google/0.121.0 (linux/amd64)
+            new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
 
       resourcedetection:
         detectors: [gcp]
@@ -122,6 +135,15 @@ data:
           - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 
+    # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
+      resource/gcp_project_id:
+        attributes:
+        - key: gcp.project_id
+          # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
+          value: ${GOOGLE_CLOUD_PROJECT}
+          action: insert
+
+
     receivers:
       otlp:
         protocols:
@@ -141,6 +163,7 @@ data:
     service:
       extensions:
       - health_check
+      - googleclientauth
       pipelines:
         logs:
           exporters:
@@ -178,10 +201,11 @@ data:
           - otlp/self-metrics
         traces:
           exporters:
-          - googlecloud
+          - otlphttp
           processors:
           - k8sattributes
           - memory_limiter
+          - resource/gcp_project_id
           - resourcedetection
           - batch
           receivers:

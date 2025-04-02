@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/instance: telemetrygen
     app.kubernetes.io/component: collector-contrib
     app.kubernetes.io/name: collector-contrib-telemetrygen
-    app.kubernetes.io/version: "0.105.0"
+    app.kubernetes.io/version: "0.122.0"
     app.kubernetes.io/part-of: collector-contrib-telemetrygen
 spec:
   replicas: 1
@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
         - name: traces
-          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.121.0'
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
           args: ["traces", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:
@@ -64,7 +64,7 @@ spec:
             limits:
               memory: 100Mi
         - name: metrics
-          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.121.0'
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
           args: ["metrics", "--otlp-insecure", "--rate=0.1", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:
@@ -85,7 +85,7 @@ spec:
             limits:
               memory: 100Mi
         - name: logs
-          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.121.0'
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
           args: ["logs", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:

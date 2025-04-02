@@ -13,12 +13,12 @@
 # limitations under the License.
 
 steps:
-# set the project ID in the k8s manifest for service account/workload identity
+# set the project ID in the k8s manifest for OTLP export
 - name: 'ubuntu'
   id: Replace
   script: |
     #!/usr/bin/env bash
-    sed -i "s/%GCLOUD_PROJECT%/${PROJECT_ID}/g" k8s/base/*
+    sed -i "s/\${GOOGLE_CLOUD_PROJECT}/${PROJECT_ID}/g" k8s/base/*
   env:
   - 'PROJECT_ID=$PROJECT_ID'
 
