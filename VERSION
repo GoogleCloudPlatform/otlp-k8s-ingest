@@ -4,5 +4,5 @@
 #  OTEL_VERSION=<otel version> make update-otel-version
 #  VERSION=<manifests version> make update-manifests-version
 
-MANIFESTS_VERSION=0.2.1
+MANIFESTS_VERSION=0.3.0
 COLLECTOR_CONTRIB_VERSION=0.121.0
