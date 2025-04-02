@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/instance: telemetrygen
     app.kubernetes.io/component: collector-contrib
     app.kubernetes.io/name: collector-contrib-telemetrygen
-    app.kubernetes.io/version: "0.105.0"
+    app.kubernetes.io/version: "0.122.0"
     app.kubernetes.io/part-of: collector-contrib-telemetrygen
 spec:
   replicas: 1
