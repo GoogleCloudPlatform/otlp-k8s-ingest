@@ -7,7 +7,7 @@ This project contains Kubernetes manifests for self-deployed OTLP ingest on Kube
 Before we begin, set required environment variables:
 ```console
 export GCLOUD_PROJECT=<your project id>
-export PROJECT_NUMBER=<your project number>
+export PROJECT_NUMBER=$(gcloud projects describe ${GCLOUD_PROJECT} --format="value(projectNumber)")
 ```
 
 ### Configure IAM Permissions
