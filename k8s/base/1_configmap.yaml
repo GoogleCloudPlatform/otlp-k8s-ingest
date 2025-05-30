@@ -16,7 +16,7 @@ data:
     # limitations under the License.
 
     exporters:
-      # The googlecloud exporter is used for logs and traces in this sample
+      # The googlecloud exporter is used for logs
       googlecloud:
         log:
           default_log_name: opentelemetry-collector
@@ -24,7 +24,8 @@ data:
       googlemanagedprometheus:
         user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
       # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
-      # The otlp exporter could also be used to send them using OTLP grpc
+      # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
+      # The otlp exporter could also be used to send metrics & traces using OTLP grpc
       otlphttp:
         encoding: proto
         endpoint: https://telemetry.googleapis.com
@@ -32,20 +33,16 @@ data:
         auth:
           authenticator: googleclientauth
 
+
     extensions:
       # Standard for the collector. Used for probes.
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
+      # This is an auth extension that adds Google Application Default Credentials to http and gRPC requests.
       googleclientauth:
 
 
     processors:
-      # When sending metrics to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
-      resource/gcp_project_id:
-        attributes:
-        - action: insert
-          value: ${GCLOUD_PROJECT}
-          key: gcp.project_id
       # This filter is a standard part of handling the collector's self-observability metrics. Not related to OTLP ingestion.
       filter/self-metrics:
         metrics:
@@ -56,6 +53,7 @@ data:
             - otelcol_process_memory_rss
             - otelcol_grpc_io_client_completed_rpcs
             - otelcol_googlecloudmonitoring_point_count
+    
       # The recommended batch size for the OTLP endpoint is 200 metric data points.
       batch:
         send_batch_max_size: 200
@@ -89,6 +87,8 @@ data:
             name: k8s.pod.uid
         - sources:
           - from: connection
+
+      # Standard processor for gracefully degrading when overloaded to prevent OOM.
       memory_limiter:
         check_interval: 1s
         limit_percentage: 65
@@ -150,7 +150,7 @@ data:
           - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
 
-    # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
+      # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
       resource/gcp_project_id:
         attributes:
         - key: gcp.project_id
@@ -171,6 +171,7 @@ data:
               - http://*
               - https://*
             endpoint: ${env:MY_POD_IP}:4318
+
       # Push the collector's own self-observability metrics to the otlp receiver.
       otlp/self-metrics:
         protocols:
@@ -221,7 +222,7 @@ data:
           - batch
           receivers:
           - otlp/self-metrics
-        # Recieve OTLP traces, and export traces using the googlecloud exporter.
+        # Recieve OTLP traces, and export traces using the otlphttp exporter.
         traces:
           exporters:
           - otlphttp
@@ -243,6 +244,7 @@ data:
                 otlp:
                   protocol: grpc
                   endpoint: ${env:MY_POD_IP}:14317
+
 kind: ConfigMap
 metadata:
   creationTimestamp: null
