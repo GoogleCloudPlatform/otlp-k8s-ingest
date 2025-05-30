@@ -41,12 +41,6 @@ data:
       googleclientauth:
 
     processors:
-      # When sending metrics to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
-      resource/gcp_project_id:
-        attributes:
-        - action: insert
-          value: ${GCLOUD_PROJECT}
-          key: gcp.project_id
       # This filter is a standard part of handling the collector's self-observability metrics. Not related to OTLP ingestion.
       filter/self-metrics:
         metrics:
@@ -253,6 +247,7 @@ data:
                 otlp:
                   protocol: grpc
                   endpoint: ${env:MY_POD_IP}:14317
+
 kind: ConfigMap
 metadata:
   creationTimestamp: null
