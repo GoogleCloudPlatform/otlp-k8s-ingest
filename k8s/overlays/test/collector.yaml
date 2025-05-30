@@ -15,14 +15,23 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
+  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
+  # The otlp exporter could also be used to send them using OTLP grpc
+  otlphttp:
+    encoding: proto
+    endpoint: https://telemetry.googleapis.com
+    # Use the googleclientauth extension to authenticate with Google credentials
+    auth:
+      authenticator: googleclientauth
   file:
     path: /output/output.json
 extensions:
   health_check:
     endpoint: ${env:MY_POD_IP}:13133
+  googleclientauth:
 processors:
   filter/self-metrics:
     metrics:
@@ -46,6 +55,7 @@ processors:
         - k8s.daemonset.name
         - k8s.cronjob.name
         - k8s.job.name
+        - k8s.replicaset.name
         - k8s.node.name
         - k8s.pod.name
         - k8s.pod.uid
@@ -71,13 +81,7 @@ processors:
         operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.1.0 otel/opentelemetry-collector-contrib:0.118.0
-  # We need to add the pod IP as a resource label so the k8s attributes processor can find it.
-  resource/self-metrics:
-    attributes:
-      - action: insert
-        key: k8s.pod.ip
-        value: ${env:MY_POD_IP}
+            new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
@@ -97,6 +101,34 @@ processors:
           - delete_key(attributes, "instance")
           - set(attributes["exported_project_id"], attributes["project_id"])
           - delete_key(attributes, "project_id")
+  # The relative ordering of statements between ReplicaSet & Deployment and Job & CronJob are important.
+  # The ordering of these controllers is decided based on the k8s controller documentation available at
+  # https://kubernetes.io/docs/concepts/workloads/controllers.
+  # The relative ordering of the other controllers in this list is inconsequential since they directly
+  # create pods.
+  transform/aco-gke:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["top_level_controller_type"], "ReplicaSet") where resource.attributes["k8s.replicaset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.replicaset.name"]) where resource.attributes["k8s.replicaset.name"] != nil
+          - set(attributes["top_level_controller_type"], "Deployment") where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.deployment.name"]) where resource.attributes["k8s.deployment.name"] != nil
+          - set(attributes["top_level_controller_type"], "DaemonSet") where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.daemonset.name"]) where resource.attributes["k8s.daemonset.name"] != nil
+          - set(attributes["top_level_controller_type"], "StatefulSet") where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.statefulset.name"]) where resource.attributes["k8s.statefulset.name"] != nil
+          - set(attributes["top_level_controller_type"], "Job") where resource.attributes["k8s.job.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
+          - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
+          - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
+          # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
+  resource/gcp_project_id:
+    attributes:
+      - key: gcp.project_id
+        # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
+        value: ${GOOGLE_CLOUD_PROJECT}
+        action: insert
 receivers:
   otlp:
     protocols:
@@ -108,14 +140,10 @@ receivers:
             - http://*
             - https://*
         endpoint: ${env:MY_POD_IP}:4318
-  prometheus/self-metrics:
-    config:
-      scrape_configs:
-        - job_name: otel-self-metrics
-          scrape_interval: 1m
-          static_configs:
-            - targets:
-                - ${env:MY_POD_IP}:8888
+  otlp/self-metrics:
+    protocols:
+      grpc:
+        endpoint: ${env:MY_POD_IP}:14317
   otlpjsonfile:
     start_at: beginning
     include:
@@ -123,6 +151,7 @@ receivers:
 service:
   extensions:
     - health_check
+    - googleclientauth
   pipelines:
     logs:
       exporters:
@@ -142,6 +171,7 @@ service:
         - memory_limiter
         - resourcedetection
         - transform/collision
+        - transform/aco-gke
         - batch
       receivers:
         - otlp
@@ -151,23 +181,30 @@ service:
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
-        - resource/self-metrics
         - k8sattributes
         - memory_limiter
         - resourcedetection
         - batch
       receivers:
-        - prometheus/self-metrics
+        - otlp/self-metrics
     traces:
       exporters:
         - file
       processors:
         - k8sattributes
         - memory_limiter
+        - resource/gcp_project_id
         - resourcedetection
         - batch
       receivers:
         - otlpjsonfile
   telemetry:
+    logs:
+      encoding: json
     metrics:
-      address: ${env:MY_POD_IP}:8888
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: ${env:MY_POD_IP}:14317

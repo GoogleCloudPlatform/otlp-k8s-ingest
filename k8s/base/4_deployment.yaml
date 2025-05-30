@@ -35,7 +35,7 @@ spec:
       containers:
       - name: opentelemetry-collector
         imagePullPolicy: Always
-        image: otel/opentelemetry-collector-contrib:0.118.0
+        image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.122.1
         args:
           - "--config=/conf/collector.yaml"
           - "--feature-gates=exporter.googlemanagedprometheus.intToDouble"
