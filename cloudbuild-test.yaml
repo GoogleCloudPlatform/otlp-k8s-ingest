@@ -20,7 +20,7 @@ steps:
   id: Replace
   script: |
     #!/usr/bin/env bash
-    grep -rlZ GCLOUD_PROJECT k8s/base/. | xargs -0 sed -i "s/\${GCLOUD_PROJECT}/$PROJECT_ID/g"
+    grep -rlZ GOOGLE_CLOUD_PROJECT k8s/base/. | xargs -0 sed -i "s/\${GOOGLE_CLOUD_PROJECT}/$PROJECT_ID/g"
   env:
   - 'PROJECT_ID=$PROJECT_ID'
 

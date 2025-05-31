@@ -6,8 +6,8 @@ This project contains Kubernetes manifests for self-deployed OTLP ingest on Kube
 
 Before we begin, set required environment variables:
 ```console
-export GCLOUD_PROJECT=<your project id>
-export PROJECT_NUMBER=<your project number>
+export GOOGLE_CLOUD_PROJECT=<your project id>
+export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
 ```
 
 ### Configure IAM Permissions
@@ -19,17 +19,17 @@ docs](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
 to allow the collector's kubernetes service account to write logs, traces, and metrics:
 
 ```console
-gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
     --role=roles/logging.logWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
     --condition=None
-gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
     --role=roles/monitoring.metricWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
     --condition=None
-gcloud projects add-iam-policy-binding projects/$GCLOUD_PROJECT \
+gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
     --role=roles/cloudtrace.agent \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GCLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
+    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
     --condition=None
 ```
 
@@ -43,7 +43,7 @@ Then, apply the Kubernetes manifests directly from this repo:
 kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/base?ref=otlpmetric | envsubst | kubectl apply -f -
 ```
 
-(Remember to set the `GCLOUD_PROJECT` environment variable.)
+(Remember to set the `GOOGLE_CLOUD_PROJECT` environment variable.)
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector
 

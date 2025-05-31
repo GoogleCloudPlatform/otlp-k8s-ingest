@@ -41,16 +41,17 @@ $(TOOLS)/kubectl: $(TOOLS)
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL)
 
-OTEL_VERSION?=$(COLLECTOR_CONTRIB_VERSION)
+OTEL_COLLECTOR_VERSION ?= $(GBOC_VERSION)
 .PHONY: update-otel-version
 update-otel-version:
-	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" config/*; \
-	sed -i "s|COLLECTOR_CONTRIB_VERSION=[0-9.]\+|COLLECTOR_CONTRIB_VERSION=$(OTEL_VERSION)|g" VERSION; \
+	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" config/*; \
+	sed -i "s|GBOC_VERSION=[0-9.]\+|GBOC_VERSION=$(OTEL_COLLECTOR_VERSION)|g" VERSION; \
 	$(MAKE) generate; \
-	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_VERSION)\"|g" k8s/base/*; \
-	sed -i "s|otel/opentelemetry-collector-contrib:[0-9.]\+|otel/opentelemetry-collector-contrib:$(OTEL_VERSION)|g" k8s/base/*
+	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_COLLECTOR_VERSION)\"|g" k8s/base/*; \
+	sed -i "s|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:[0-9.]\+|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*; \
+	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*;
 
-VERSION?=$(MANIFESTS_VERSION)
+VERSION ?= $(MANIFESTS_VERSION)
 .PHONY: update-manifests-version
 update-manifests-version:
 	sed -i "s|manifests:[0-9.]\+|manifests:$(VERSION)|g" config/*; \
