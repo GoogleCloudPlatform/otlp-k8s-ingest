@@ -202,7 +202,6 @@ data:
           processors:
           - k8sattributes
           - memory_limiter
-          - metricstarttime
           - resource/gcp_project_id
           - resourcedetection
           - transform/collision
@@ -247,7 +246,6 @@ data:
                 otlp:
                   protocol: grpc
                   endpoint: ${env:MY_POD_IP}:14317
-
 kind: ConfigMap
 metadata:
   creationTimestamp: null
