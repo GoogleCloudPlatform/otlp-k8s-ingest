@@ -49,3 +49,13 @@ on:
 
       - name: run yamllint
         run: yamllint . -f github
+
+    generate:
+      runs-on: ubuntu-latest
+      steps:
+      - name: check out code
+        uses: actions/checkout@v4
+      - name: Generate
+        run: make generate
+      - name: Check clean work tree
+        run : make check-clean-work-tree
