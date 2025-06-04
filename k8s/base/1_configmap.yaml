@@ -157,7 +157,6 @@ data:
           # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
           value: ${GOOGLE_CLOUD_PROJECT}
           action: insert
-
       # The metricstarttime processor is important to include if you are using the prometheus receiver to ensure the start time is set properly.
       # It is a no-op otherwise.
       metricstarttime:
