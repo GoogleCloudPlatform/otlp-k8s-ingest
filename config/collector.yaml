@@ -17,9 +17,9 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
   # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
   # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
   # The otlp exporter could also be used to send metrics & traces using OTLP grpc
@@ -50,7 +50,7 @@ processors:
         - otelcol_process_memory_rss
         - otelcol_grpc_io_client_completed_rpcs
         - otelcol_googlecloudmonitoring_point_count
- 
+
   # The recommended batch size for the OTLP endpoint is 200 metric data points.
   batch:
     send_batch_max_size: 200
@@ -99,7 +99,7 @@ processors:
       operations:
       - action: add_label
         new_label: version
-        new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.122.1 (linux/amd64)
+        new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
 
   # The resourcedetection processor, similar to the k8sattributes processor, enriches metrics with important metadata.
   # The gcp detector provides the cluster name and cluster location.
@@ -155,6 +155,10 @@ processors:
       value: ${GOOGLE_CLOUD_PROJECT}
       action: insert
 
+  # The metricstarttime processor is important to include if you are using the prometheus receiver to ensure the start time is set properly.
+  # It is a no-op otherwise.
+  metricstarttime:
+    strategy: subtract_initial_point
 
 receivers:
   # This collector is configured to accept OTLP metrics, logs, and traces, and is designed to receive OTLP from workloads running in the cluster.
@@ -202,6 +206,7 @@ service:
       - resourcedetection
       - transform/collision
       - transform/aco-gke
+      - metricstarttime
       - batch
       receivers:
       - otlp
