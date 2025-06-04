@@ -18,44 +18,42 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
 
-  jobs:
-    markdownlint:
-      runs-on: ubuntu-latest
-      steps:
-      - name: check out code
-        uses: actions/checkout@v4
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out code
+      uses: actions/checkout@v4
 
-      - name: install dependencies
-        run: npm install
+    - name: install dependencies
+      run: npm install
 
-      - name: run markdownlint
-        run: make markdownlint
+    - name: run markdownlint
+      run: make markdownlint
 
-    yamllint:
-      runs-on: ubuntu-latest
-      steps:
-      - name: check out code
-        uses: actions/checkout@v4
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out code
+      uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
 
-      - name: install yamllint
-        run: make install-yamllint
+    - name: install yamllint
+      run: make install-yamllint
 
-      - name: run yamllint
-        run: yamllint . -f github
+    - name: run yamllint
+      run: yamllint . -f github
 
-    generate:
-      runs-on: ubuntu-latest
-      steps:
-      - name: check out code
-        uses: actions/checkout@v4
-      - name: Generate
-        run: make generate
-      - name: Check clean work tree
-        run : make check-clean-work-tree
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out code
+      uses: actions/checkout@v4
+    - name: Generate
+      run: make generate
+    - name: Check clean work tree
+      run : make check-clean-work-tree
