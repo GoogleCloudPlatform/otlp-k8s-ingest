@@ -52,6 +52,6 @@ roleRef:
   kind: ClusterRole
   name: opentelemetry-collector
 subjects:
-- kind: ServiceAccount
-  name: opentelemetry-collector
-  namespace: opentelemetry
+  - kind: ServiceAccount
+    name: opentelemetry-collector
+    namespace: opentelemetry

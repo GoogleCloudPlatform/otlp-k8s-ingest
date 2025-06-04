@@ -54,4 +54,4 @@ jobs:
     - name: Generate
       run: make generate
     - name: Check clean work tree
-      run : make check-clean-work-tree
+      run: make check-clean-work-tree
