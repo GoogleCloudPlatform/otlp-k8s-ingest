@@ -16,6 +16,8 @@ include VERSION
 
 TOOLS = $(CURDIR)/.tools
 
+YAMLLINT_VERSION=1.30.0
+
 $(TOOLS):
 	mkdir -p $@
 
@@ -93,3 +95,12 @@ check-clean-work-tree:
 	  git diff; \
 	  exit 1; \
 	fi
+
+.PHONY: install-yamllint
+install-yamllint:
+    # Using a venv is recommended
+	yamllint --version >/dev/null 2>&1 || pip install -U yamllint~=$(YAMLLINT_VERSION)
+
+.PHONY: yamllint
+yamllint: install-yamllint
+	yamllint .
