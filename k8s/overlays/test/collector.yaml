@@ -16,9 +16,9 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
   # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
   # The otlp exporter could also be used to send metrics & traces using OTLP grpc
@@ -92,7 +92,7 @@ processors:
         operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+            new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   # The resourcedetection processor, similar to the k8sattributes processor, enriches metrics with important metadata.
   # The gcp detector provides the cluster name and cluster location.
   resourcedetection:
