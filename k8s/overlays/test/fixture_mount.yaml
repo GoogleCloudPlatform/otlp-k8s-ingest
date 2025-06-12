@@ -23,8 +23,12 @@
     configMap:
       name: collector-config
       items:
-        - key: fixture.json
-          path: fixture.json
+        - key: spans_fixture.json
+          path: spans_input.json
+        - key: metrics_fixture.json
+          path: metrics_input.json
+        - key: logs_fixture.json
+          path: logs_input.json
 
 - path: /spec/template/spec/volumes/2
   op: add
@@ -46,7 +50,7 @@
   op: add
   value:
     name: test-fixture
-    mountPath: /test
+    mountPath: /test/fixtures
 
 - path: /spec/template/spec/containers/0/volumeMounts/2
   op: add

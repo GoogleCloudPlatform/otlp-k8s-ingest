@@ -13,19 +13,41 @@
 # limitations under the License.
 
 receivers:
-  otlpjsonfile:
+  otlpjsonfile/spans:
     start_at: beginning
     include:
-      - "/test/fixture.json"
+      - "/test/fixtures/spans_input.json"
+  otlpjsonfile/metrics:
+    start_at: beginning
+    include:
+      - "/test/fixtures/metrics_input.json"
+  otlpjsonfile/logs:
+    start_at: beginning
+    include:
+      - "/test/fixtures/logs_input.json"
 
 exporters:
-  file:
-    path: /output/output.json
+  file/spans:
+    path: /output/spans_output.json
+  file/metrics:
+    path: /output/metrics_output.json
+  file/logs:
+    path: /output/logs_output.json
 
 service:
   pipelines:
     traces:
       receivers:
-        - otlpjsonfile
+        - otlpjsonfile/spans
       exporters:
-        - file
+        - file/spans
+    metrics:
+      receivers:
+        - otlpjsonfile/metrics
+      exporters:
+        - file/metrics
+    logs:
+      receivers:
+        - otlpjsonfile/logs
+      exporters:
+        - file/logs

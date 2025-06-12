@@ -65,15 +65,41 @@ steps:
     #!/usr/bin/env bash
     sleep 5
 
-# Copy the telemetry out
+# Copy the span telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
-  id: Copy
+  id: CopySpans
   args:
   - 'cp'
   - '-c'
   - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/output.json'
-  - 'test/fixtures/tmp.json'
+  - 'opentelemetry/opentelemetry-collector-0:/output/spans_output.json'
+  - 'test/fixtures/spans_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the metric telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopyMetrics
+  args:
+  - 'cp'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/metrics_output.json'
+  - 'test/fixtures/metrics_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the log telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopyLogs
+  args:
+  - 'cp'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/logs_output.json'
+  - 'test/fixtures/logs_output.json'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'

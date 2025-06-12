@@ -26,8 +26,12 @@ exporters:
     # Use the googleclientauth extension to authenticate with Google credentials
     auth:
       authenticator: googleclientauth
-  file:
-    path: /output/output.json
+  file/spans:
+    path: /output/spans_output.json
+  file/metrics:
+    path: /output/metrics_output.json
+  file/logs:
+    path: /output/logs_output.json
 extensions:
   health_check:
     endpoint: ${env:MY_POD_IP}:13133
@@ -149,10 +153,18 @@ receivers:
     protocols:
       grpc:
         endpoint: ${env:MY_POD_IP}:14317
-  otlpjsonfile:
+  otlpjsonfile/spans:
     start_at: beginning
     include:
-      - "/test/fixture.json"
+      - "/test/fixtures/spans_input.json"
+  otlpjsonfile/metrics:
+    start_at: beginning
+    include:
+      - "/test/fixtures/metrics_input.json"
+  otlpjsonfile/logs:
+    start_at: beginning
+    include:
+      - "/test/fixtures/logs_input.json"
 service:
   extensions:
     - health_check
@@ -160,14 +172,14 @@ service:
   pipelines:
     logs:
       exporters:
-        - googlecloud
+        - file/logs
       processors:
         - k8sattributes
         - resourcedetection
         - memory_limiter
         - batch
       receivers:
-        - otlp
+        - otlpjsonfile/logs
     metrics/otlp:
       exporters:
         - googlemanagedprometheus
@@ -195,7 +207,7 @@ service:
         - otlp/self-metrics
     traces:
       exporters:
-        - file
+        - file/spans
       processors:
         - k8sattributes
         - memory_limiter
@@ -203,7 +215,12 @@ service:
         - resourcedetection
         - batch
       receivers:
-        - otlpjsonfile
+        - otlpjsonfile/spans
+    metrics:
+      receivers:
+        - otlpjsonfile/metrics
+      exporters:
+        - file/metrics
   telemetry:
     logs:
       encoding: json
