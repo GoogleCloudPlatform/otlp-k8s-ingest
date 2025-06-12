@@ -64,26 +64,38 @@ update-manifests-version:
 generate: tools
 	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
 	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
-	cat test/fixtures/input.json | $(JQ) -c > k8s/overlays/test/fixture.json
+	cat test/fixtures/spans_input.json | $(JQ) -c > k8s/overlays/test/spans_fixture.json
+	cat test/fixtures/metrics_input.json | $(JQ) -c > k8s/overlays/test/metrics_fixture.json
+	cat test/fixtures/logs_input.json | $(JQ) -c > k8s/overlays/test/logs_fixture.json
 
 .PHONY: test
 test: tools
-	$(KUBECTL) apply -k k8s/overlays/test
+	$(KUBECTL) kustomize k8s/overlays/test | envsubst | kubectl apply -f -
 	while : ; do \
 		$(KUBECTL) get pod/opentelemetry-collector-0 -n opentelemetry && break; \
 		sleep 5; \
 	done
 	$(KUBECTL) wait --for=condition=Ready --timeout=60s pod/opentelemetry-collector-0 -n opentelemetry
 	sleep 5
-	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/output.json test/fixtures/tmp.json
-	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
-	rm test/fixtures/tmp.json
+	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/spans_output.json test/fixtures/spans_output.json
+	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/metrics_output.json test/fixtures/metrics_output.json
+	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/logs_output.json test/fixtures/logs_output.json
+	$(JQ) . test/fixtures/spans_output.json > test/fixtures/spans_expect.json
+	$(JQ) . test/fixtures/metrics_output.json > test/fixtures/metrics_expect.json
+	$(JQ) . test/fixtures/logs_output.json > test/fixtures/logs_expect.json
+	rm test/fixtures/spans_output.json
+	rm test/fixtures/metrics_output.json
+	rm test/fixtures/logs_output.json
 	$(KUBECTL) delete -k k8s/overlays/test
 
 .PHONY: prettify-fixture
 prettify-fixture: tools
-	$(JQ) . test/fixtures/tmp.json > test/fixtures/expect.json
-	rm test/fixtures/tmp.json
+	$(JQ) . test/fixtures/spans_output.json > test/fixtures/spans_expect.json
+	rm test/fixtures/spans_output.json
+	$(JQ) . test/fixtures/metrics_output.json > test/fixtures/metrics_expect.json
+	rm test/fixtures/metrics_output.json
+	$(JQ) . test/fixtures/logs_output.json > test/fixtures/logs_expect.json
+	rm test/fixtures/logs_output.json
 
 .PHONY: check-clean-work-tree
 check-clean-work-tree:

@@ -24,7 +24,9 @@ configMapGenerator:
     behavior: replace
     files:
       - collector.yaml
-      - fixture.json
+      - spans_fixture.json
+      - metrics_fixture.json
+      - logs_fixture.json
 
 patches:
   - target:

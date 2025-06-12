@@ -15,31 +15,31 @@ assert_equal() {
 }
 
 @test "contains host.name resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"host.name\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"host.name\") != null")
       assert_equal "$result" "true"
 }
 
 @test "contains cloud.provider resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.provider\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.provider\") != null")
       assert_equal "$result" "true"
 }
 
 @test "contains cloud.account.id resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.account.id\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.account.id\") != null")
       assert_equal "$result" "true"
 }
 
 @test "contains cloud.platform resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.platform\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.platform\") != null")
       assert_equal "$result" "true"
 }
 
 @test "contains cloud.region resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.region\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.region\") != null")
       assert_equal "$result" "true"
 }
 
 @test "contains k8s.cluster.name resource attribute" {
-      result=$(cat test/fixtures/expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"k8s.cluster.name\") != null")
+      result=$(cat test/fixtures/spans_expect.json | .tools/jq ".resourceSpans[].resource.attributes[]?" | .tools/jq "select(.key == \"k8s.cluster.name\") != null")
       assert_equal "$result" "true"
 }
