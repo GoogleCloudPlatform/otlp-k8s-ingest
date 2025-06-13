@@ -59,6 +59,7 @@ steps:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
 
+# Sleep long enough for one self-observability export interval
 - name: 'ubuntu'
   id: Wait for telemetry to be collected
   script: |
@@ -121,6 +122,18 @@ steps:
   - 'filecp'
   - 'opentelemetry/opentelemetry-collector-0:/output/logs_output.json'
   - 'test/fixtures/logs_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Print collector container logs for easy debugging.
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Print container logs
+  args:
+  - 'logs'
+  - 'opentelemetry-collector-0'
+  - '-n'
+  - 'opentelemetry'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
