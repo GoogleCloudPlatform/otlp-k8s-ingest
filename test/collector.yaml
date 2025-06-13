@@ -31,6 +31,8 @@ exporters:
     path: /output/spans_output.json
   file/metrics:
     path: /output/metrics_output.json
+  file/self-metrics:
+    path: /output/self_metrics_output.json
   file/logs:
     path: /output/logs_output.json
 
@@ -41,11 +43,14 @@ service:
         - otlpjsonfile/spans
       exporters:
         - file/spans
-    metrics:
+    metrics/otlp:
       receivers:
         - otlpjsonfile/metrics
       exporters:
         - file/metrics
+    metrics/self-metrics:
+      exporters:
+        - file/self-metrics
     logs:
       receivers:
         - otlpjsonfile/logs

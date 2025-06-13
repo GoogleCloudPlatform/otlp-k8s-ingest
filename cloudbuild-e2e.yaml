@@ -63,13 +63,15 @@ steps:
   id: Wait for telemetry to be collected
   script: |
     #!/usr/bin/env bash
-    sleep 5
+    sleep 60
 
 # Copy the span telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
   id: CopySpans
   args:
   - 'cp'
+  - '--retries'
+  - '3'
   - '-c'
   - 'filecp'
   - 'opentelemetry/opentelemetry-collector-0:/output/spans_output.json'
@@ -83,10 +85,27 @@ steps:
   id: CopyMetrics
   args:
   - 'cp'
+  - '--retries'
+  - '3'
   - '-c'
   - 'filecp'
   - 'opentelemetry/opentelemetry-collector-0:/output/metrics_output.json'
   - 'test/fixtures/metrics_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the self-metric telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopySelfMetrics
+  args:
+  - 'cp'
+  - '--retries'
+  - '3'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json'
+  - 'test/fixtures/self_metrics_output.json'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -96,6 +115,8 @@ steps:
   id: CopyLogs
   args:
   - 'cp'
+  - '--retries'
+  - '3'
   - '-c'
   - 'filecp'
   - 'opentelemetry/opentelemetry-collector-0:/output/logs_output.json'

@@ -30,6 +30,8 @@ exporters:
     path: /output/spans_output.json
   file/metrics:
     path: /output/metrics_output.json
+  file/self-metrics:
+    path: /output/self_metrics_output.json
   file/logs:
     path: /output/logs_output.json
 extensions:
@@ -182,7 +184,7 @@ service:
         - otlpjsonfile/logs
     metrics/otlp:
       exporters:
-        - googlemanagedprometheus
+        - file/metrics
       processors:
         - k8sattributes
         - memory_limiter
@@ -192,10 +194,10 @@ service:
         - transform/aco-gke
         - batch
       receivers:
-        - otlp
+        - otlpjsonfile/metrics
     metrics/self-metrics:
       exporters:
-        - googlemanagedprometheus
+        - file/self-metrics
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
@@ -216,11 +218,6 @@ service:
         - batch
       receivers:
         - otlpjsonfile/spans
-    metrics:
-      receivers:
-        - otlpjsonfile/metrics
-      exporters:
-        - file/metrics
   telemetry:
     logs:
       encoding: json
