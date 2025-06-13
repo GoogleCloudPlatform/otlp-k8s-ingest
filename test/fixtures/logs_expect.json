@@ -1,0 +1,363 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "gcp"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "dashpole-dev"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "gcp_kubernetes_engine"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "us-east1"
+            }
+          },
+          {
+            "key": "k8s.cluster.name",
+            "value": {
+              "stringValue": "otlp-test-2"
+            }
+          },
+          {
+            "key": "host.id",
+            "value": {
+              "stringValue": "4288661591293009056"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+            }
+          }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": {},
+          "logRecords": [
+            {
+              "timeUnixNano": "1655923556339005014",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "body",
+                      "value": {
+                        "kvlistValue": {
+                          "values": [
+                            {
+                              "key": "time",
+                              "value": {
+                                "stringValue": "2022-06-22T16:13:19Z"
+                              }
+                            },
+                            {
+                              "key": "level",
+                              "value": {
+                                "stringValue": "info"
+                              }
+                            },
+                            {
+                              "key": "msg",
+                              "value": {
+                                "stringValue": "this log has IsSampled=0"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "file.name",
+                  "value": {
+                    "stringValue": "apache.log"
+                  }
+                },
+                {
+                  "key": "gcp.log_name",
+                  "value": {
+                    "stringValue": "my-log-name-foo"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "logs_input.json"
+                  }
+                }
+              ],
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "d39ba683befbd246"
+            },
+            {
+              "timeUnixNano": "1655923556339179012",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "body",
+                      "value": {
+                        "kvlistValue": {
+                          "values": [
+                            {
+                              "key": "time",
+                              "value": {
+                                "stringValue": "2022-06-22T16:13:19Z"
+                              }
+                            },
+                            {
+                              "key": "level",
+                              "value": {
+                                "stringValue": "info"
+                              }
+                            },
+                            {
+                              "key": "msg",
+                              "value": {
+                                "stringValue": "this log has IsSampled=1"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "file.name",
+                  "value": {
+                    "stringValue": "apache.log"
+                  }
+                },
+                {
+                  "key": "gcp.log_name",
+                  "value": {
+                    "stringValue": "my-log-name-foo"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "logs_input.json"
+                  }
+                }
+              ],
+              "flags": 1,
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "97c0f2f642dd1306"
+            },
+            {
+              "timeUnixNano": "1655923556339195932",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "body",
+                      "value": {
+                        "kvlistValue": {
+                          "values": [
+                            {
+                              "key": "level",
+                              "value": {
+                                "stringValue": "info"
+                              }
+                            },
+                            {
+                              "key": "msg",
+                              "value": {
+                                "stringValue": "this log has neither flag nor gcp.trace_sampled"
+                              }
+                            },
+                            {
+                              "key": "time",
+                              "value": {
+                                "stringValue": "2022-06-22T16:13:19Z"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "file.name",
+                  "value": {
+                    "stringValue": "apache.log"
+                  }
+                },
+                {
+                  "key": "gcp.log_name",
+                  "value": {
+                    "stringValue": "my-log-name-foo"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "logs_input.json"
+                  }
+                }
+              ],
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "fded437fb39abed9"
+            },
+            {
+              "timeUnixNano": "1655923556339234508",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "body",
+                      "value": {
+                        "kvlistValue": {
+                          "values": [
+                            {
+                              "key": "time",
+                              "value": {
+                                "stringValue": "2022-06-22T16:13:19Z"
+                              }
+                            },
+                            {
+                              "key": "level",
+                              "value": {
+                                "stringValue": "info"
+                              }
+                            },
+                            {
+                              "key": "msg",
+                              "value": {
+                                "stringValue": "this log has gcp.trace_sampled=false"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "file.name",
+                  "value": {
+                    "stringValue": "apache.log"
+                  }
+                },
+                {
+                  "key": "gcp.log_name",
+                  "value": {
+                    "stringValue": "my-log-name-foo"
+                  }
+                },
+                {
+                  "key": "gcp.trace_sampled",
+                  "value": {
+                    "boolValue": false
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "logs_input.json"
+                  }
+                }
+              ],
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "6acb5055846322e7"
+            },
+            {
+              "timeUnixNano": "1655923556339240397",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "body",
+                      "value": {
+                        "kvlistValue": {
+                          "values": [
+                            {
+                              "key": "time",
+                              "value": {
+                                "stringValue": "2022-06-22T16:13:19Z"
+                              }
+                            },
+                            {
+                              "key": "level",
+                              "value": {
+                                "stringValue": "info"
+                              }
+                            },
+                            {
+                              "key": "msg",
+                              "value": {
+                                "stringValue": "this log has gcp.trace_sampled=true"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "file.name",
+                  "value": {
+                    "stringValue": "apache.log"
+                  }
+                },
+                {
+                  "key": "gcp.log_name",
+                  "value": {
+                    "stringValue": "my-log-name-foo"
+                  }
+                },
+                {
+                  "key": "gcp.trace_sampled",
+                  "value": {
+                    "boolValue": true
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "logs_input.json"
+                  }
+                }
+              ],
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "d9ae3a7b26ef239f"
+            }
+          ]
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1"
+    }
+  ]
+}
