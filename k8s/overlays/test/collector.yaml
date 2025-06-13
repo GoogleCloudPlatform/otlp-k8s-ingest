@@ -32,6 +32,8 @@ exporters:
     path: /output/spans_output.json
   file/metrics:
     path: /output/metrics_output.json
+  file/self-metrics:
+    path: /output/self_metrics_output.json
   file/logs:
     path: /output/logs_output.json
 extensions:
@@ -199,7 +201,7 @@ service:
     # Recieve OTLP metrics, and export metrics to GMP using the otlphttp exporter.
     metrics/otlp:
       exporters:
-        - otlphttp
+        - file/metrics
       processors:
         - k8sattributes
         - memory_limiter
@@ -210,11 +212,11 @@ service:
         - metricstarttime
         - batch
       receivers:
-        - otlp
+        - otlpjsonfile/metrics
     # Scrape self-observability Prometheus metrics, and export metrics to GMP using the otlphttp exporter.
     metrics/self-metrics:
       exporters:
-        - otlphttp
+        - file/self-metrics
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
@@ -237,11 +239,6 @@ service:
         - batch
       receivers:
         - otlpjsonfile/spans
-    metrics:
-      receivers:
-        - otlpjsonfile/metrics
-      exporters:
-        - file/metrics
   telemetry:
     logs:
       encoding: json

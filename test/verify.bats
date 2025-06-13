@@ -103,3 +103,33 @@ assert_equal() {
       result=$(cat test/fixtures/metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"k8s.cluster.name\") != null")
       assert_equal "$result" "true"
 }
+
+@test "self metrics contain host.name resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"host.name\") != null")
+      assert_equal "$result" "true"
+}
+
+@test "self metrics contain cloud.provider resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.provider\") != null")
+      assert_equal "$result" "true"
+}
+
+@test "self metrics contain cloud.account.id resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.account.id\") != null")
+      assert_equal "$result" "true"
+}
+
+@test "self metrics contain cloud.platform resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.platform\") != null")
+      assert_equal "$result" "true"
+}
+
+@test "self metrics contain cloud.region resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"cloud.region\") != null")
+      assert_equal "$result" "true"
+}
+
+@test "self metrics contain k8s.cluster.name resource attribute" {
+      result=$(cat test/fixtures/self_metrics_expect.json | .tools/jq ".resourceMetrics[].resource.attributes[]?" | .tools/jq "select(.key == \"k8s.cluster.name\") != null")
+      assert_equal "$result" "true"
+}
