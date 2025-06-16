@@ -82,14 +82,7 @@ test: tools
 	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/metrics_output.json test/fixtures/metrics_output.json
 	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json test/fixtures/self_metrics_output.json
 	$(KUBECTL) cp -c filecp opentelemetry/opentelemetry-collector-0:/output/logs_output.json test/fixtures/logs_output.json
-	$(JQ) . test/fixtures/spans_output.json > test/fixtures/spans_expect.json
-	$(JQ) . test/fixtures/metrics_output.json > test/fixtures/metrics_expect.json
-	$(JQ) . test/fixtures/self_metrics_output.json > test/fixtures/self_metrics_expect.json
-	$(JQ) . test/fixtures/logs_output.json > test/fixtures/logs_expect.json
-	rm test/fixtures/spans_output.json
-	rm test/fixtures/metrics_output.json
-	rm test/fixtures/self_metrics_output.json
-	rm test/fixtures/logs_output.json
+	$(MAKE) prettify-fixture
 	$(KUBECTL) logs opentelemetry-collector-0 -n opentelemetry
 	$(KUBECTL) delete -k k8s/overlays/test
 
