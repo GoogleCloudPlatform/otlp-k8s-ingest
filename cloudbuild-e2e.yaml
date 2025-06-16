@@ -13,6 +13,13 @@
 # limitations under the License.
 
 steps:
+- name: 'ubuntu'
+  id: Generate
+  script: |
+    #!/usr/bin/env bash
+    apt-get update && apt-get install -y build-essential curl
+    make generate
+
 # set the project ID in the k8s manifest for OTLP export
 - name: 'ubuntu'
   id: Replace

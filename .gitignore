@@ -1,1 +1,4 @@
 .tools/
+k8s/overlays/test/logs_fixture.json
+k8s/overlays/test/metrics_fixture.json
+k8s/overlays/test/spans_fixture.json
