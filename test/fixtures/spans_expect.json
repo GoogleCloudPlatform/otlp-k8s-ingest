@@ -4,12 +4,6 @@
       "resource": {
         "attributes": [
           {
-            "key": "host.name",
-            "value": {
-              "stringValue": "gk3-test-pool-2-fadf3985-gctw"
-            }
-          },
-          {
             "key": "process.command_args",
             "value": {
               "arrayValue": {
@@ -94,6 +88,12 @@
             }
           },
           {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "dashpole-dev"
+            }
+          },
+          {
             "key": "cloud.provider",
             "value": {
               "stringValue": "gcp"
@@ -102,7 +102,7 @@
           {
             "key": "cloud.account.id",
             "value": {
-              "stringValue": "mikedame-joonix"
+              "stringValue": "dashpole-dev"
             }
           },
           {
@@ -114,19 +114,25 @@
           {
             "key": "cloud.region",
             "value": {
-              "stringValue": "us-central1"
+              "stringValue": "us-east1"
             }
           },
           {
             "key": "k8s.cluster.name",
             "value": {
-              "stringValue": "test"
+              "stringValue": "otlp-test-2"
             }
           },
           {
             "key": "host.id",
             "value": {
-              "stringValue": "3895876644443549114"
+              "stringValue": "4288661591293009056"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
             }
           }
         ]
@@ -247,6 +253,12 @@
                   "key": "http.status_code",
                   "value": {
                     "intValue": "200"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "spans_input.json"
                   }
                 }
               ],

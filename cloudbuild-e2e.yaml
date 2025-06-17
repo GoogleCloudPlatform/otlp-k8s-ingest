@@ -13,6 +13,13 @@
 # limitations under the License.
 
 steps:
+- name: 'ubuntu'
+  id: Generate
+  script: |
+    #!/usr/bin/env bash
+    apt-get update && apt-get install -y build-essential curl
+    make generate
+
 # set the project ID in the k8s manifest for OTLP export
 - name: 'ubuntu'
   id: Replace
@@ -59,21 +66,81 @@ steps:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
 
+# Sleep long enough for one self-observability export interval
 - name: 'ubuntu'
   id: Wait for telemetry to be collected
   script: |
     #!/usr/bin/env bash
-    sleep 5
+    sleep 60
 
-# Copy the telemetry out
+# Copy the span telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
-  id: Copy
+  id: CopySpans
   args:
   - 'cp'
+  - '--retries'
+  - '3'
   - '-c'
   - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/output.json'
-  - 'test/fixtures/tmp.json'
+  - 'opentelemetry/opentelemetry-collector-0:/output/spans_output.json'
+  - 'test/fixtures/spans_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the metric telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopyMetrics
+  args:
+  - 'cp'
+  - '--retries'
+  - '3'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/metrics_output.json'
+  - 'test/fixtures/metrics_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the self-metric telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopySelfMetrics
+  args:
+  - 'cp'
+  - '--retries'
+  - '3'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json'
+  - 'test/fixtures/self_metrics_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Copy the log telemetry out
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: CopyLogs
+  args:
+  - 'cp'
+  - '--retries'
+  - '3'
+  - '-c'
+  - 'filecp'
+  - 'opentelemetry/opentelemetry-collector-0:/output/logs_output.json'
+  - 'test/fixtures/logs_output.json'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
+
+# Print collector container logs for easy debugging.
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Print container logs
+  args:
+  - 'logs'
+  - 'opentelemetry-collector-0'
+  - '-n'
+  - 'opentelemetry'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
