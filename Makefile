@@ -69,7 +69,7 @@ generate: tools
 	cat test/fixtures/logs_input.json | $(JQ) -c > k8s/overlays/test/logs_fixture.json
 
 .PHONY: test
-test: tools
+test: tools generate
 	$(KUBECTL) kustomize k8s/overlays/test | envsubst | kubectl apply -f -
 	while : ; do \
 		$(KUBECTL) get pod/opentelemetry-collector-0 -n opentelemetry && break; \
