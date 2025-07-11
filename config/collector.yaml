@@ -19,7 +19,8 @@ exporters:
     user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   googlemanagedprometheus:
     user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
-  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
+  # The otlphttp exporter is used to send traces to Google Cloud Trace and
+  # metrics to Google Managed Prometheus using OTLP http/proto.
   # The otlp exporter could also be used to send them using OTLP grpc
   otlphttp:
     encoding: proto
@@ -140,10 +141,6 @@ processors:
       # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
       value: ${GOOGLE_CLOUD_PROJECT}
       action: insert
-<<<<<<< HEAD
-=======
-
->>>>>>> 8939281 (update generated files)
   # The metricstarttime processor is important to include if you are using the prometheus receiver to ensure the start time is set properly.
   # It is a no-op otherwise.
   metricstarttime:
