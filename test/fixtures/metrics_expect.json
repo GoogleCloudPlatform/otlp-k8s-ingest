@@ -16,6 +16,12 @@
             }
           },
           {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "dashpole-dev"
+            }
+          },
+          {
             "key": "cloud.provider",
             "value": {
               "stringValue": "gcp"
@@ -48,13 +54,13 @@
           {
             "key": "host.id",
             "value": {
-              "stringValue": "4288661591293009056"
+              "stringValue": "5032761239350862555"
             }
           },
           {
             "key": "host.name",
             "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-xc2n"
             }
           }
         ]
@@ -76,11 +82,173 @@
                         }
                       }
                     ],
-                    "startTimeUnixNano": "1649443416286000000",
                     "timeUnixNano": "1649443516286000000",
                     "asDouble": 3
                   }
                 ]
+              },
+              "metadata": [
+                {
+                  "key": "prometheus.type",
+                  "value": {
+                    "stringValue": "unknown"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "metrics_input.json"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "fake_untyped_metric",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": true
+              },
+              "metadata": [
+                {
+                  "key": "prometheus.type",
+                  "value": {
+                    "stringValue": "unknown"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "metrics_input.json"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1"
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "demo"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": "10.92.5.2:15692"
+            }
+          },
+          {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "dashpole-dev"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "gcp"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "dashpole-dev"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "gcp_kubernetes_engine"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "us-east1"
+            }
+          },
+          {
+            "key": "k8s.cluster.name",
+            "value": {
+              "stringValue": "otlp-test-2"
+            }
+          },
+          {
+            "key": "host.id",
+            "value": {
+              "stringValue": "5032761239350862555"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-xc2n"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {},
+          "metrics": [
+            {
+              "name": "fake_untyped_metric",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      {
+                        "key": "ex_com_lemons_untyped",
+                        "value": {
+                          "stringValue": "13"
+                        }
+                      }
+                    ],
+                    "timeUnixNano": "1649443517286000000",
+                    "asDouble": 10
+                  }
+                ]
+              },
+              "metadata": [
+                {
+                  "key": "prometheus.type",
+                  "value": {
+                    "stringValue": "unknown"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "metrics_input.json"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "fake_untyped_metric",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      {
+                        "key": "ex_com_lemons_untyped",
+                        "value": {
+                          "stringValue": "13"
+                        }
+                      }
+                    ],
+                    "timeUnixNano": "1649443517286000000",
+                    "asDouble": 7
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": true
               },
               "metadata": [
                 {
