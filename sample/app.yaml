@@ -47,19 +47,19 @@ spec:
           args: ["traces", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:
-          - name: OTEL_SERVICE_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.labels['app.kubernetes.io/component']
-          - name: OTEL_COLLECTOR_NAME
-            value: 'opentelemetry-collector'
-          - name: OTEL_COLLECTOR_NAMESPACE
-            value: 'opentelemetry'
-          - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-            value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
-          - name: OTEL_RESOURCE_ATTRIBUTES
-            value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'opentelemetry'
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
             limits:
               memory: 100Mi
@@ -68,19 +68,19 @@ spec:
           args: ["metrics", "--otlp-insecure", "--rate=0.1", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:
-          - name: OTEL_SERVICE_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.labels['app.kubernetes.io/component']
-          - name: OTEL_COLLECTOR_NAME
-            value: 'opentelemetry-collector'
-          - name: OTEL_COLLECTOR_NAMESPACE
-            value: 'opentelemetry'
-          - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-            value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
-          - name: OTEL_RESOURCE_ATTRIBUTES
-            value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'opentelemetry'
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
             limits:
               memory: 100Mi
@@ -89,19 +89,19 @@ spec:
           args: ["logs", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)"]
           imagePullPolicy: IfNotPresent
           env:
-          - name: OTEL_SERVICE_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.labels['app.kubernetes.io/component']
-          - name: OTEL_COLLECTOR_NAME
-            value: 'opentelemetry-collector'
-          - name: OTEL_COLLECTOR_NAMESPACE
-            value: 'opentelemetry'
-          - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-            value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
-          - name: OTEL_RESOURCE_ATTRIBUTES
-            value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'opentelemetry'
+            - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           resources:
             limits:
               memory: 100Mi

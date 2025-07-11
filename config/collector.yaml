@@ -17,12 +17,12 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
-  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
-  # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
-  # The otlp exporter could also be used to send metrics & traces using OTLP grpc
+    user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
+  # The otlphttp exporter is used to send traces to Google Cloud Trace and
+  # metrics to Google Managed Prometheus using OTLP http/proto.
+  # The otlp exporter could also be used to send them using OTLP grpc
   otlphttp:
     encoding: proto
     endpoint: https://telemetry.googleapis.com
@@ -99,7 +99,7 @@ processors:
       operations:
       - action: add_label
         new_label: version
-        new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+        new_value: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
 
   # The resourcedetection processor, similar to the k8sattributes processor, enriches metrics with important metadata.
   # The gcp detector provides the cluster name and cluster location.
@@ -154,7 +154,6 @@ processors:
       # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
       value: ${GOOGLE_CLOUD_PROJECT}
       action: insert
-
   # The metricstarttime processor is important to include if you are using the prometheus receiver to ensure the start time is set properly.
   # It is a no-op otherwise.
   metricstarttime:

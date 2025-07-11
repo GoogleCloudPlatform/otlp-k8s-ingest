@@ -16,20 +16,26 @@ exporters:
   googlecloud:
     log:
       default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+    user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
-  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
-  # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
-  # The otlp exporter could also be used to send metrics & traces using OTLP grpc
+    user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
+  # The otlphttp exporter is used to send traces to Google Cloud Trace and
+  # metrics to Google Managed Prometheus using OTLP http/proto.
+  # The otlp exporter could also be used to send them using OTLP grpc
   otlphttp:
     encoding: proto
     endpoint: https://telemetry.googleapis.com
     # Use the googleclientauth extension to authenticate with Google credentials
     auth:
       authenticator: googleclientauth
-  file:
-    path: /output/output.json
+  file/spans:
+    path: /output/spans_output.json
+  file/metrics:
+    path: /output/metrics_output.json
+  file/self-metrics:
+    path: /output/self_metrics_output.json
+  file/logs:
+    path: /output/logs_output.json
 extensions:
   # Standard for the collector. Used for probes.
   health_check:
@@ -92,7 +98,7 @@ processors:
         operations:
           - action: add_label
             new_label: version
-            new_value: Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.127.0 (linux/amd64)
+            new_value: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   # The resourcedetection processor, similar to the k8sattributes processor, enriches metrics with important metadata.
   # The gcp detector provides the cluster name and cluster location.
   resourcedetection:
@@ -164,10 +170,18 @@ receivers:
     protocols:
       grpc:
         endpoint: ${env:MY_POD_IP}:14317
-  otlpjsonfile:
+  otlpjsonfile/spans:
     start_at: beginning
     include:
-      - "/test/fixture.json"
+      - "/test/fixtures/spans_input.json"
+  otlpjsonfile/metrics:
+    start_at: beginning
+    include:
+      - "/test/fixtures/metrics_input.json"
+  otlpjsonfile/logs:
+    start_at: beginning
+    include:
+      - "/test/fixtures/logs_input.json"
 service:
   extensions:
     - health_check
@@ -176,18 +190,18 @@ service:
     # Recieve OTLP logs, and export logs using the googlecloud exporter.
     logs:
       exporters:
-        - googlecloud
+        - file/logs
       processors:
         - k8sattributes
         - resourcedetection
         - memory_limiter
         - batch
       receivers:
-        - otlp
+        - otlpjsonfile/logs
     # Recieve OTLP metrics, and export metrics to GMP using the otlphttp exporter.
     metrics/otlp:
       exporters:
-        - otlphttp
+        - file/metrics
       processors:
         - k8sattributes
         - memory_limiter
@@ -198,11 +212,11 @@ service:
         - metricstarttime
         - batch
       receivers:
-        - otlp
+        - otlpjsonfile/metrics
     # Scrape self-observability Prometheus metrics, and export metrics to GMP using the otlphttp exporter.
     metrics/self-metrics:
       exporters:
-        - otlphttp
+        - file/self-metrics
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
@@ -216,7 +230,7 @@ service:
     # Recieve OTLP traces, and export traces using the otlphttp exporter.
     traces:
       exporters:
-        - file
+        - file/spans
       processors:
         - k8sattributes
         - memory_limiter
@@ -224,7 +238,7 @@ service:
         - resourcedetection
         - batch
       receivers:
-        - otlpjsonfile
+        - otlpjsonfile/spans
   telemetry:
     logs:
       encoding: json

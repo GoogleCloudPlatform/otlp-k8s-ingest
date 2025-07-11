@@ -5,6 +5,7 @@ This project contains Kubernetes manifests for self-deployed OTLP ingest on Kube
 ## Running on GKE
 
 Before we begin, set required environment variables:
+
 ```console
 export GOOGLE_CLOUD_PROJECT=<your project id>
 export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
@@ -47,7 +48,9 @@ kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/bas
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector
 
-To test out and see the deployment in action, you can run the demo OpenTemetry application using
+To test out and see the deployment in action, you can run the demo OpenTemetry
+application using
+
 ```console
 kubectl apply  -f sample/.
 ```
@@ -59,7 +62,9 @@ You can see metrics under "Prometheus Target" in Cloud Monitoring.
 
 ### Observability of the OpenTelemetry Collector
 
-In order to monitor the OpenTelemetry collector, you can deploy the dashboards available [here](https://github.com/GoogleCloudPlatform/monitoring-dashboard-samples/tree/master/dashboards/opentelemetry-collector).
+In order to monitor the OpenTelemetry collector, you can deploy the dashboards
+available
+[here](https://github.com/GoogleCloudPlatform/monitoring-dashboard-samples/tree/master/dashboards/opentelemetry-collector).
 
 You can import these dashboards by navigating to the Google Cloud Console and:
 
@@ -68,7 +73,9 @@ You can import these dashboards by navigating to the Google Cloud Console and:
 - Clicking on the `OpenTelemetry Collector` category from the list
 - Select and import the available dashboards
 
-Once you import and apply the dashboard, you'll see several metrics tracking the uptime of the collector, its memory footprint and the API calls it makes to Cloud Observability:
+Once you import and apply the dashboard, you'll see several metrics tracking
+the uptime of the collector, its memory footprint and the API calls it makes
+to Cloud Observability:
 
 ![OpenTelemetry Collector Dashboard](/dashboard.png "OpenTelemetry Collector Dashboard")
 
