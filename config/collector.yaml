@@ -20,9 +20,9 @@ exporters:
     user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
   googlemanagedprometheus:
     user_agent: Google-Cloud-OTLP manifests:0.4.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)
-  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
-  # The otlphttp exporter is used to send metrics to GMP using OTLP http/json
-  # The otlp exporter could also be used to send metrics & traces using OTLP grpc
+  # The otlphttp exporter is used to send traces to Google Cloud Trace and
+  # metrics to Google Managed Prometheus using OTLP http/proto.
+  # The otlp exporter could also be used to send them using OTLP grpc
   otlphttp:
     encoding: proto
     endpoint: https://telemetry.googleapis.com
