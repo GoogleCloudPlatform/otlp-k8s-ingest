@@ -149,6 +149,18 @@ data:
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
           - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
+      # For each Prometheus unknown-typed metric, which is a gauge, create a counter that is an exact copy of this metric.
+      # The GCP OTLP endpoint will add appropriate the appropriate suffixes for the counter and gauge.
+      transform/unknown-counter:
+        metric_statements:
+        - context: metric
+          statements:
+          # Copy the unknown metric, but add a suffix so we can distinguish the copy from the original.
+          - copy_metric(Concat([metric.name, "unknowncounter"], ":")) where metric.metadata["prometheus.type"] == "unknown" and not HasSuffix(metric.name, ":unknowncounter")
+          # Change the copy to a monotonic, cumulative sum.
+          - convert_gauge_to_sum("cumulative", true) where HasSuffix(metric.name, ":unknowncounter")
+          # Delete the extra suffix once we are done.
+          - set(metric.name, Substring(metric.name, 0, Len(metric.name)-Len(":unknowncounter"))) where HasSuffix(metric.name, ":unknowncounter")
 
       # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
       resource/gcp_project_id:
@@ -208,6 +220,7 @@ data:
           - resourcedetection
           - transform/collision
           - transform/aco-gke
+          - transform/unknown-counter
           - metricstarttime
           - batch
           receivers:
