@@ -46,8 +46,8 @@ processors:
         metric_names:
           - otelcol_process_uptime
           - otelcol_process_memory_rss
-          - otelcol_grpc_io_client_completed_rpcs
-          - otelcol_googlecloudmonitoring_point_count
+          - grpc.client.attempt.duration
+          - googlecloudmonitoring/point_count
   batch:
     send_batch_max_size: 200
     send_batch_size: 200
