@@ -227,6 +227,5 @@ data:
                   endpoint: ${env:MY_POD_IP}:14317
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: collector-config
   namespace: opentelemetry
