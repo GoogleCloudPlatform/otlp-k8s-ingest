@@ -16,7 +16,7 @@ include VERSION
 
 TOOLS = $(CURDIR)/.tools
 OS := $(shell uname | tr '[:upper:]' '[:lower:]')
-ARCH := $(shell uname -m | sed 's/x86_64/amd64/;s/arm64/arm64/')
+ARCH := $(shell uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
 
 YAMLLINT_VERSION=1.30.0
 
@@ -30,8 +30,9 @@ $(TOOLS)/yq: $(TOOLS)
 	mv ./yq $(TOOLS)/yq
 
 JQ = $(TOOLS)/jq
+JQ_OS := $(if $(filter darwin,$(OS)),macos,$(OS))
 $(TOOLS)/jq: $(TOOLS)
-	curl -L "https://github.com/jqlang/jq/releases/latest/download/jq-$$( [ "$(OS)" = "darwin" ] && echo macos || echo $OS )-$(ARCH)" -o jq && \
+	curl -L "https://github.com/jqlang/jq/releases/latest/download/jq-$(JQ_OS)-$(ARCH)" -o jq && \
 	chmod +x ./jq && mv ./jq $(TOOLS)/jq
 
 
