@@ -44,6 +44,12 @@ Then, apply the Kubernetes manifests directly from this repo:
 kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/base | envsubst | kubectl apply -f -
 ```
 
+If the prefer way is DaemonSet instead of Deployment, apply the following mainfests
+
+```console
+kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest/k8s/daemonset | envsubst | kubectl apply -f -
+```
+
 (Remember to set the `GOOGLE_CLOUD_PROJECT` environment variable.)
 
 ### [Optional] Run the OpenTelemetry demo application alongside the collector
