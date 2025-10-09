@@ -12,12 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - 0_namespace.yaml
-  - 1_configmap.yaml
-  - 2_rbac.yaml
-  - 3_service.yaml
-  - 4_daemonset.yaml
-  - 5_hpa.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: opentelemetry-collector
+  namespace: opentelemetry
+  labels:
+    app: opentelemetry-collector
+spec:
+  type: ClusterIP
+  selector:
+    app: opentelemetry-collector
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: otel-grpc
+      protocol: TCP
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
