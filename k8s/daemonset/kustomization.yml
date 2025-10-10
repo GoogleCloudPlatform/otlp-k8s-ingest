@@ -20,4 +20,4 @@ resources:
   - 2_rbac.yaml
   - 3_service.yaml
   - 4_daemonset.yaml
-  - 5_hpa.yaml
+  
