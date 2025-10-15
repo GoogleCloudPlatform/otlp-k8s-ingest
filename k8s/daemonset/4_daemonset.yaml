@@ -46,6 +46,11 @@ spec:
               containerPort: 4318
               protocol: TCP
           env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName          
             - name: MY_POD_IP
               valueFrom:
                 fieldRef:

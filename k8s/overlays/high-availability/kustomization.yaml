@@ -12,28 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: opentelemetry-collector
-  namespace: opentelemetry
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: opentelemetry-collector
-  minReplicas: 1
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 80
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# High-availability overlay with:
+# - 2 replicas minimum
+# - Node name tracking via KUBE_NODE_NAME env var
+# - Zone-aware pod distribution with topology spread constraints
+# - Zone-aware traffic routing (prefer same zone)
+# - Pod anti-affinity for better distribution
+
+resources:
+  - ../../base
+
+patches:
+  - path: deployment-patch.yaml
+  - path: hpa-patch.yaml
+  - path: configmap-patch.yaml
+
+
