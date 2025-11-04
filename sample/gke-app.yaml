@@ -1,0 +1,107 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opentelemetry-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-contrib-telemetrygen
+  namespace: opentelemetry-demo
+  labels:
+    opentelemetry.io/name: collector-contrib-telemetrygen
+    app.kubernetes.io/instance: telemetrygen
+    app.kubernetes.io/component: collector-contrib
+    app.kubernetes.io/name: collector-contrib-telemetrygen
+    app.kubernetes.io/version: "0.122.0"
+    app.kubernetes.io/part-of: collector-contrib-telemetrygen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      opentelemetry.io/name: collector-contrib-telemetrygen
+  template:
+    metadata:
+      labels:
+        opentelemetry.io/name: collector-contrib-telemetrygen
+        app.kubernetes.io/instance: telemetrygen
+        app.kubernetes.io/component: collector-contrib
+    spec:
+      containers:
+        - name: traces
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
+          args: ["traces", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)"]
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'gke-managed-otel'
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+          resources:
+            limits:
+              memory: 100Mi
+        - name: metrics
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
+          args: ["metrics", "--otlp-insecure", "--rate=0.1", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)"]
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'gke-managed-otel'
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+          resources:
+            limits:
+              memory: 100Mi
+        - name: logs
+          image: 'ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.122.0'
+          args: ["logs", "--otlp-insecure", "--rate=3", "--duration=5m", "--otlp-endpoint=$(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)"]
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-collector'
+            - name: OTEL_COLLECTOR_NAMESPACE
+              value: 'gke-managed-otel'
+            - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+              value: $(OTEL_COLLECTOR_NAME).$(OTEL_COLLECTOR_NAMESPACE).svc.cluster.local:4317
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
+          resources:
+            limits:
+              memory: 100Mi
