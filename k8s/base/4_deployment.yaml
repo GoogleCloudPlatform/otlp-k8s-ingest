@@ -20,7 +20,6 @@ metadata:
   labels:
     app: opentelemetry-collector
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app: opentelemetry-collector
