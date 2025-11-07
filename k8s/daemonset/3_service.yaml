@@ -24,7 +24,7 @@ spec:
   selector:
     app: opentelemetry-collector
   internalTrafficPolicy: Cluster
-  trafficDistribution: PreferClose 
+  trafficDistribution: PreferClose
   ports:
     - name: otel-grpc
       protocol: TCP
