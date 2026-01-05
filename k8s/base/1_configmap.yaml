@@ -228,6 +228,5 @@ data:
                   insecure: true
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: collector-config
   namespace: opentelemetry
