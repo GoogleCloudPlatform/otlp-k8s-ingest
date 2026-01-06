@@ -224,9 +224,9 @@ data:
               exporter:
                 otlp:
                   protocol: grpc
-                  endpoint: ${env:MY_POD_IP}:14317
+                  endpoint: http://${env:MY_POD_IP}:14317
+                  insecure: true
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: collector-config
   namespace: opentelemetry
