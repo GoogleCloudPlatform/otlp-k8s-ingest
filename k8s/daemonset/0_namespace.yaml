@@ -13,24 +13,6 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: Service
+kind: Namespace
 metadata:
-  name: opentelemetry-collector
-  namespace: opentelemetry
-  labels:
-    app: opentelemetry-collector
-spec:
-  type: ClusterIP
-  selector:
-    app: opentelemetry-collector
-  internalTrafficPolicy: Cluster
-  trafficDistribution: PreferClose 
-  ports:
-    - name: otel-grpc
-      protocol: TCP
-      port: 4317
-      targetPort: 4317
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
+  name: opentelemetry
