@@ -6,7 +6,7 @@
           {
             "key": "service.instance.id",
             "value": {
-              "stringValue": "5b6865f5-4b90-4481-96d2-21b04af5a664"
+              "stringValue": "886a2747-47b7-4c15-accc-7f792099173a"
             }
           },
           {
@@ -18,19 +18,13 @@
           {
             "key": "service.version",
             "value": {
-              "stringValue": "0.128.0"
+              "stringValue": "0.131.0"
             }
           },
           {
             "key": "k8s.pod.ip",
             "value": {
-              "stringValue": "10.106.129.156"
-            }
-          },
-          {
-            "key": "k8s.node.name",
-            "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "10.48.8.5"
             }
           },
           {
@@ -48,19 +42,31 @@
           {
             "key": "k8s.pod.start_time",
             "value": {
-              "stringValue": "2025-06-13T20:31:11Z"
+              "stringValue": "2026-01-22T18:56:32Z"
             }
           },
           {
             "key": "k8s.pod.uid",
             "value": {
-              "stringValue": "9f4bd3c0-adca-4aab-ac02-6c0a418f986c"
+              "stringValue": "9d2ba2cc-9853-4bb1-98ea-7e640ade8497"
             }
           },
           {
             "key": "k8s.statefulset.name",
             "value": {
               "stringValue": "opentelemetry-collector"
+            }
+          },
+          {
+            "key": "k8s.node.name",
+            "value": {
+              "stringValue": "gke-cluster-2-default-pool-3e11d9c0-wj2z"
+            }
+          },
+          {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "westphalrafael-dev"
             }
           },
           {
@@ -72,7 +78,7 @@
           {
             "key": "cloud.account.id",
             "value": {
-              "stringValue": "dashpole-dev"
+              "stringValue": "westphalrafael-dev"
             }
           },
           {
@@ -84,29 +90,30 @@
           {
             "key": "cloud.region",
             "value": {
-              "stringValue": "us-east1"
+              "stringValue": "us-central1"
             }
           },
           {
             "key": "k8s.cluster.name",
             "value": {
-              "stringValue": "otlp-test-2"
+              "stringValue": "cluster-2"
             }
           },
           {
             "key": "host.id",
             "value": {
-              "stringValue": "4288661591293009056"
+              "stringValue": "5376163897820546005"
             }
           },
           {
             "key": "host.name",
             "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "gke-cluster-2-default-pool-3e11d9c0-wj2z"
             }
           }
         ]
       },
+      "schemaUrl": "https://opentelemetry.io/schemas/1.26.0",
       "scopeMetrics": [
         {
           "scope": {
@@ -120,9 +127,9 @@
               "gauge": {
                 "dataPoints": [
                   {
-                    "startTimeUnixNano": "1749846676123345013",
-                    "timeUnixNano": "1749846736121952077",
-                    "asInt": "118149120"
+                    "startTimeUnixNano": "1769108425898008790",
+                    "timeUnixNano": "1769108485897919734",
+                    "asInt": "126828544"
                   }
                 ]
               }
@@ -132,29 +139,28 @@
               "description": "Uptime of the process [alpha]",
               "unit": "s",
               "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": true,
                 "dataPoints": [
                   {
                     "attributes": [
                       {
                         "key": "version",
                         "value": {
-                          "stringValue": "Google-Cloud-OTLP manifests:0.3.0 OpenTelemetry Collector Built By Google/0.128.0 (linux/amd64)"
+                          "stringValue": "Google-Cloud-OTLP manifests:0.5.0 OpenTelemetry Collector Built By Google/0.131.0 (linux/amd64)"
                         }
                       }
                     ],
-                    "startTimeUnixNano": "1749846676123400604",
-                    "timeUnixNano": "1749846736121958248",
-                    "asDouble": 59.967476818
+                    "startTimeUnixNano": "1769108425898053083",
+                    "timeUnixNano": "1769108485897928603",
+                    "asDouble": 59.981468816
                   }
-                ],
-                "aggregationTemporality": 2,
-                "isMonotonic": true
+                ]
               }
             }
           ]
         }
-      ],
-      "schemaUrl": "https://opentelemetry.io/schemas/1.26.0"
+      ]
     }
   ]
 }

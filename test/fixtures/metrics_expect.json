@@ -16,6 +16,12 @@
             }
           },
           {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "westphalrafael-dev"
+            }
+          },
+          {
             "key": "cloud.provider",
             "value": {
               "stringValue": "gcp"
@@ -24,7 +30,7 @@
           {
             "key": "cloud.account.id",
             "value": {
-              "stringValue": "dashpole-dev"
+              "stringValue": "westphalrafael-dev"
             }
           },
           {
@@ -36,35 +42,50 @@
           {
             "key": "cloud.region",
             "value": {
-              "stringValue": "us-east1"
+              "stringValue": "us-central1"
             }
           },
           {
             "key": "k8s.cluster.name",
             "value": {
-              "stringValue": "otlp-test-2"
+              "stringValue": "cluster-2"
             }
           },
           {
             "key": "host.id",
             "value": {
-              "stringValue": "4288661591293009056"
+              "stringValue": "5376163897820546005"
             }
           },
           {
             "key": "host.name",
             "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "gke-cluster-2-default-pool-3e11d9c0-wj2z"
             }
           }
         ]
       },
+      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1",
       "scopeMetrics": [
         {
           "scope": {},
           "metrics": [
             {
               "name": "fake_untyped_metric",
+              "metadata": [
+                {
+                  "key": "prometheus.type",
+                  "value": {
+                    "stringValue": "unknown"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "metrics_input.json"
+                  }
+                }
+              ],
               "gauge": {
                 "dataPoints": [
                   {
@@ -81,26 +102,11 @@
                     "asDouble": 3
                   }
                 ]
-              },
-              "metadata": [
-                {
-                  "key": "prometheus.type",
-                  "value": {
-                    "stringValue": "unknown"
-                  }
-                },
-                {
-                  "key": "log.file.name",
-                  "value": {
-                    "stringValue": "metrics_input.json"
-                  }
-                }
-              ]
+              }
             }
           ]
         }
-      ],
-      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1"
+      ]
     }
   ]
 }

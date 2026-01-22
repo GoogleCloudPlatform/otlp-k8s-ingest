@@ -178,10 +178,11 @@ service:
       - otlp
     metrics/otlp:
       exporters:
-      - googlemanagedprometheus
+      - otlphttp
       processors:
       - k8sattributes
       - memory_limiter
+      - resource/gcp_project_id
       - metricstarttime
       - resourcedetection
       - transform/collision
@@ -191,12 +192,14 @@ service:
       - otlp
     metrics/self-metrics:
       exporters:
-      - googlemanagedprometheus
+      - otlphttp
       processors:
       - filter/self-metrics
       - metricstransform/self-metrics
       - k8sattributes
       - memory_limiter
+      - resource/gcp_project_id
+      - metricstarttime
       - resourcedetection
       - batch
       receivers:
