@@ -58,7 +58,7 @@ processors:
         - k8s.pod.name
         - k8s.pod.uid
         - k8s.pod.start_time
-    passthrough: true
+    passthrough: false
     pod_association:
       - sources:
           - from: resource_attribute
@@ -196,11 +196,11 @@ service:
         - otlpjsonfile/logs
       processors:
         - k8sattributes
+        - memory_limiter
         - resourcedetection
         - resource/gcp_project_id
         - transform/otlp/preserve_instrumentation_source_version
         - transform/otlp/copy_service_resource_labels
-        - memory_limiter
         - batch
       exporters:
         - file/logs
@@ -238,8 +238,8 @@ service:
       processors:
         - k8sattributes
         - memory_limiter
-        - resource/gcp_project_id
         - resourcedetection
+        - resource/gcp_project_id
         - batch
       exporters:
         - file/spans
