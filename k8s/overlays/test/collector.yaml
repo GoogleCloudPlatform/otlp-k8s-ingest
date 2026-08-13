@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 exporters:
-  googlecloud:
-    log:
-      default_log_name: opentelemetry-collector
-    user_agent: Google-Cloud-OTLP manifests:0.5.0 OpenTelemetry Collector Built By Google/0.131.0 (linux/amd64)
-  googlemanagedprometheus:
-    user_agent: Google-Cloud-OTLP manifests:0.5.0 OpenTelemetry Collector Built By Google/0.131.0 (linux/amd64)
-  # The otlphttp exporter is used to send traces to Google Cloud Trace using OTLP http/proto
-  # The otlp exporter could also be used to send them using OTLP grpc
-  otlphttp:
-    encoding: proto
-    endpoint: https://telemetry.googleapis.com
-    # Use the googleclientauth extension to authenticate with Google credentials
+  # The otlp_grpc exporter is used to send telemetry (logs, metrics, traces) to GCP Telemetry API using OTLP gRPC
+  otlp_grpc:
+    endpoint: telemetry.googleapis.com:443
+    balancer_name: pick_first
     auth:
       authenticator: googleclientauth
   file/spans:
@@ -128,13 +120,40 @@ processors:
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.job.name"]) where resource.attributes["k8s.job.name"] != nil
           - set(attributes["top_level_controller_type"], "CronJob") where resource.attributes["k8s.cronjob.name"] != nil
           - set(attributes["top_level_controller_name"], resource.attributes["k8s.cronjob.name"]) where resource.attributes["k8s.cronjob.name"] != nil
+  # For each Prometheus unknown-typed metric, which is a gauge, create a counter that is an exact copy of this metric.
+  # The GCP OTLP endpoint will add appropriate suffixes for the counter and gauge.
+  transform/unknown-counter:
+    metric_statements:
+      - context: metric
+        statements:
+          # Copy the unknown metric, but add a suffix so we can distinguish the copy from the original.
+          - copy_metric(Concat([metric.name, "unknowncounter"], ":")) where metric.metadata["prometheus.type"] == "unknown" and not HasSuffix(metric.name, ":unknowncounter")
+          # Change the copy to a monotonic, cumulative sum.
+          - convert_gauge_to_sum("cumulative", true) where HasSuffix(metric.name, ":unknowncounter")
+          # Delete the extra suffix once we are done.
+          - set(metric.name, Substring(metric.name, 0, Len(metric.name)-Len(":unknowncounter"))) where HasSuffix(metric.name, ":unknowncounter")
+  transform/otlp_grpc/preserve_instrumentation_source_version:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["instrumentation_source"], instrumentation_scope.name) where instrumentation_scope.name != ""
+          - set(attributes["instrumentation_version"], instrumentation_scope.version) where instrumentation_scope.version != ""
+  transform/otlp_grpc/copy_service_resource_labels:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["service.name"], resource.attributes["service.name"]) where resource.attributes["service.name"] != nil
+          - set(attributes["service.namespace"], resource.attributes["service.namespace"]) where resource.attributes["service.namespace"] != nil
+          - set(attributes["service.instance.id"], resource.attributes["service.instance.id"]) where resource.attributes["service.instance.id"] != nil
   # When sending telemetry to the GCP OTLP endpoint, the gcp.project_id resource attribute is required to be set to your project ID.
   resource/gcp_project_id:
     attributes:
-      - key: gcp.project_id
+      - action: insert
+        key: gcp.project_id
         # MAKE SURE YOU REPLACE THIS WITH YOUR PROJECT ID
         value: ${GOOGLE_CLOUD_PROJECT}
-        action: insert
   # The metricstarttime processor is important to include if you are using the prometheus receiver to ensure the start time is set properly.
   # It is a no-op otherwise.
   metricstarttime:
@@ -173,51 +192,57 @@ service:
     - googleclientauth
   pipelines:
     logs:
-      exporters:
-        - file/logs
-      processors:
-        - k8sattributes
-        - resourcedetection
-        - memory_limiter
-        - batch
       receivers:
         - otlpjsonfile/logs
-    metrics/otlp:
+      processors:
+        - k8sattributes
+        - resourcedetection
+        - resource/gcp_project_id
+        - transform/otlp_grpc/preserve_instrumentation_source_version
+        - transform/otlp_grpc/copy_service_resource_labels
+        - memory_limiter
+        - batch
       exporters:
-        - file/metrics
+        - file/logs
+    metrics/otlp:
+      receivers:
+        - otlpjsonfile/metrics
       processors:
         - k8sattributes
         - memory_limiter
-        - metricstarttime
         - resourcedetection
+        - resource/gcp_project_id
         - transform/collision
         - transform/aco-gke
+        - transform/unknown-counter
+        - metricstarttime
         - batch
-      receivers:
-        - otlpjsonfile/metrics
-    metrics/self-metrics:
       exporters:
-        - file/self-metrics
+        - file/metrics
+    metrics/self-metrics:
+      receivers:
+        - otlp/self-metrics
       processors:
         - filter/self-metrics
         - metricstransform/self-metrics
         - k8sattributes
         - memory_limiter
         - resourcedetection
+        - resource/gcp_project_id
         - batch
-      receivers:
-        - otlp/self-metrics
-    traces:
       exporters:
-        - file/spans
+        - file/self-metrics
+    traces:
+      receivers:
+        - otlpjsonfile/spans
       processors:
         - k8sattributes
         - memory_limiter
         - resource/gcp_project_id
         - resourcedetection
         - batch
-      receivers:
-        - otlpjsonfile/spans
+      exporters:
+        - file/spans
   telemetry:
     logs:
       encoding: json
