@@ -21,15 +21,7 @@ to allow the collector's kubernetes service account to write logs, traces, and m
 
 ```console
 gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
-    --role=roles/logging.logWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
-    --condition=None
-gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
-    --role=roles/monitoring.metricWriter \
-    --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
-    --condition=None
-gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
-    --role=roles/cloudtrace.agent \
+    --role=roles/telemetry.writer \
     --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
     --condition=None
 ```
