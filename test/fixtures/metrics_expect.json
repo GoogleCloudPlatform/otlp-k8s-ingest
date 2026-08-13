@@ -24,7 +24,7 @@
           {
             "key": "cloud.account.id",
             "value": {
-              "stringValue": "dashpole-dev"
+              "stringValue": "xuechun-gke-dev"
             }
           },
           {
@@ -34,37 +34,58 @@
             }
           },
           {
-            "key": "cloud.region",
+            "key": "cloud.availability_zone",
             "value": {
-              "stringValue": "us-east1"
+              "stringValue": "us-central1-a"
             }
           },
           {
             "key": "k8s.cluster.name",
             "value": {
-              "stringValue": "otlp-test-2"
+              "stringValue": "otel-test-cluster"
             }
           },
           {
             "key": "host.id",
             "value": {
-              "stringValue": "4288661591293009056"
+              "stringValue": "7789134360691640186"
             }
           },
           {
             "key": "host.name",
             "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "gke-otel-test-cluster-default-pool-53997469-20jn"
+            }
+          },
+          {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "xuechun-gke-dev"
             }
           }
         ]
       },
+      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1",
       "scopeMetrics": [
         {
           "scope": {},
           "metrics": [
             {
               "name": "fake_untyped_metric",
+              "metadata": [
+                {
+                  "key": "prometheus.type",
+                  "value": {
+                    "stringValue": "unknown"
+                  }
+                },
+                {
+                  "key": "log.file.name",
+                  "value": {
+                    "stringValue": "metrics_input.json"
+                  }
+                }
+              ],
               "gauge": {
                 "dataPoints": [
                   {
@@ -81,7 +102,10 @@
                     "asDouble": 3
                   }
                 ]
-              },
+              }
+            },
+            {
+              "name": "fake_untyped_metric",
               "metadata": [
                 {
                   "key": "prometheus.type",
@@ -95,12 +119,30 @@
                     "stringValue": "metrics_input.json"
                   }
                 }
-              ]
+              ],
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": true,
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      {
+                        "key": "ex_com_lemons_untyped",
+                        "value": {
+                          "stringValue": "13"
+                        }
+                      }
+                    ],
+                    "startTimeUnixNano": "1649443416286000000",
+                    "timeUnixNano": "1649443516286000000",
+                    "asDouble": 3
+                  }
+                ]
+              }
             }
           ]
         }
-      ],
-      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1"
+      ]
     }
   ]
 }

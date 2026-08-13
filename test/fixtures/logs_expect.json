@@ -12,7 +12,7 @@
           {
             "key": "cloud.account.id",
             "value": {
-              "stringValue": "dashpole-dev"
+              "stringValue": "xuechun-gke-dev"
             }
           },
           {
@@ -22,37 +22,46 @@
             }
           },
           {
-            "key": "cloud.region",
+            "key": "cloud.availability_zone",
             "value": {
-              "stringValue": "us-east1"
+              "stringValue": "us-central1-a"
             }
           },
           {
             "key": "k8s.cluster.name",
             "value": {
-              "stringValue": "otlp-test-2"
+              "stringValue": "otel-test-cluster"
             }
           },
           {
             "key": "host.id",
             "value": {
-              "stringValue": "4288661591293009056"
+              "stringValue": "7789134360691640186"
             }
           },
           {
             "key": "host.name",
             "value": {
-              "stringValue": "gk3-otlp-test-2-nap-11zfxnfd-edd3704c-msgx"
+              "stringValue": "gke-otel-test-cluster-default-pool-53997469-20jn"
+            }
+          },
+          {
+            "key": "gcp.project_id",
+            "value": {
+              "stringValue": "xuechun-gke-dev"
             }
           }
         ]
       },
+      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1",
       "scopeLogs": [
         {
           "scope": {},
           "logRecords": [
             {
               "timeUnixNano": "1655923556339005014",
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "d39ba683befbd246",
               "body": {
                 "kvlistValue": {
                   "values": [
@@ -105,12 +114,13 @@
                     "stringValue": "logs_input.json"
                   }
                 }
-              ],
-              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
-              "spanId": "d39ba683befbd246"
+              ]
             },
             {
               "timeUnixNano": "1655923556339179012",
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "97c0f2f642dd1306",
+              "flags": 1,
               "body": {
                 "kvlistValue": {
                   "values": [
@@ -163,13 +173,12 @@
                     "stringValue": "logs_input.json"
                   }
                 }
-              ],
-              "flags": 1,
-              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
-              "spanId": "97c0f2f642dd1306"
+              ]
             },
             {
               "timeUnixNano": "1655923556339195932",
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "fded437fb39abed9",
               "body": {
                 "kvlistValue": {
                   "values": [
@@ -222,12 +231,12 @@
                     "stringValue": "logs_input.json"
                   }
                 }
-              ],
-              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
-              "spanId": "fded437fb39abed9"
+              ]
             },
             {
               "timeUnixNano": "1655923556339234508",
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "6acb5055846322e7",
               "body": {
                 "kvlistValue": {
                   "values": [
@@ -286,12 +295,12 @@
                     "stringValue": "logs_input.json"
                   }
                 }
-              ],
-              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
-              "spanId": "6acb5055846322e7"
+              ]
             },
             {
               "timeUnixNano": "1655923556339240397",
+              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
+              "spanId": "d9ae3a7b26ef239f",
               "body": {
                 "kvlistValue": {
                   "values": [
@@ -350,14 +359,11 @@
                     "stringValue": "logs_input.json"
                   }
                 }
-              ],
-              "traceId": "ad57e7b40d6f172d04f8a0e1b80cafe4",
-              "spanId": "d9ae3a7b26ef239f"
+              ]
             }
           ]
         }
-      ],
-      "schemaUrl": "https://opentelemetry.io/schemas/1.6.1"
+      ]
     }
   ]
 }

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 exporters:
-  # The otlp_grpc exporter is used to send telemetry (logs, metrics, traces) to GCP Telemetry API using OTLP gRPC
-  otlp_grpc:
+  # The otlp exporter is used to send telemetry (logs, metrics, traces) to GCP Telemetry API using OTLP gRPC
+  otlp:
     endpoint: telemetry.googleapis.com:443
     balancer_name: pick_first
     auth:
@@ -58,7 +58,7 @@ processors:
         - k8s.pod.name
         - k8s.pod.uid
         - k8s.pod.start_time
-    passthrough: false
+    passthrough: true
     pod_association:
       - sources:
           - from: resource_attribute
@@ -132,14 +132,14 @@ processors:
           - convert_gauge_to_sum("cumulative", true) where HasSuffix(metric.name, ":unknowncounter")
           # Delete the extra suffix once we are done.
           - set(metric.name, Substring(metric.name, 0, Len(metric.name)-Len(":unknowncounter"))) where HasSuffix(metric.name, ":unknowncounter")
-  transform/otlp_grpc/preserve_instrumentation_source_version:
+  transform/otlp/preserve_instrumentation_source_version:
     error_mode: ignore
     log_statements:
       - context: log
         statements:
           - set(attributes["instrumentation_source"], instrumentation_scope.name) where instrumentation_scope.name != ""
           - set(attributes["instrumentation_version"], instrumentation_scope.version) where instrumentation_scope.version != ""
-  transform/otlp_grpc/copy_service_resource_labels:
+  transform/otlp/copy_service_resource_labels:
     error_mode: ignore
     log_statements:
       - context: log
@@ -198,8 +198,8 @@ service:
         - k8sattributes
         - resourcedetection
         - resource/gcp_project_id
-        - transform/otlp_grpc/preserve_instrumentation_source_version
-        - transform/otlp_grpc/copy_service_resource_labels
+        - transform/otlp/preserve_instrumentation_source_version
+        - transform/otlp/copy_service_resource_labels
         - memory_limiter
         - batch
       exporters:
