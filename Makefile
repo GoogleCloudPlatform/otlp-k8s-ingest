@@ -15,6 +15,8 @@
 include VERSION
 
 TOOLS = $(CURDIR)/.tools
+OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+ARCH := $(shell uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
 
 YAMLLINT_VERSION=1.30.0
 
@@ -23,20 +25,21 @@ $(TOOLS):
 
 YQ = $(TOOLS)/yq
 $(TOOLS)/yq: $(TOOLS)
-	curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o yq_linux_amd64 && \
-	chmod +x ./yq_linux_amd64 && \
-	mv ./yq_linux_amd64 $(TOOLS)/yq
+	curl -L "https://github.com/mikefarah/yq/releases/latest/download/yq_$(OS)_$(ARCH)" -o yq && \
+	chmod +x ./yq && \
+	mv ./yq $(TOOLS)/yq
 
 JQ = $(TOOLS)/jq
+JQ_OS := $(if $(filter darwin,$(OS)),macos,$(OS))
 $(TOOLS)/jq: $(TOOLS)
-	curl -L https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64 -o jq-linux-amd64 && \
-	chmod +x ./jq-linux-amd64 && \
-	mv ./jq-linux-amd64 $(TOOLS)/jq
+	curl -L "https://github.com/jqlang/jq/releases/latest/download/jq-$(JQ_OS)-$(ARCH)" -o jq && \
+	chmod +x ./jq && mv ./jq $(TOOLS)/jq
 
 
 KUBECTL = $(TOOLS)/kubectl
+
 $(TOOLS)/kubectl: $(TOOLS)
-	curl -LO "https://dl.k8s.io/release/$(shell curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+	curl -LO "https://dl.k8s.io/release/$$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/$(OS)/$(ARCH)/kubectl" && \
 	chmod +x ./kubectl && \
 	mv ./kubectl $(TOOLS)/
 
