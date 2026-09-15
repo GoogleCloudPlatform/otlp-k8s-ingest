@@ -2,64 +2,46 @@
 
 This directory contains clean, modular Kubernetes manifests for deploying the OpenTelemetry Collector targeting **Google Cloud Observability** (Cloud Trace, Cloud Monitoring, Cloud Logging).
 
-The manifests support:
-* **3 Deployment Modes**:
-  * **Gateway** (`k8s/gateway`): Multi-replica ingestion gateway exposed via a Kubernetes Service.
-  * **Deployment** (`k8s/deployment`): Standalone collector deployment with a single replica.
-  * **DaemonSet** (`k8s/daemonset`): Per-node collector agent mounting `/var/log/pods` with node tolerations.
-* **Both Environments**:
-  * **GKE**: Native Workload Identity via GKE metadata server.
-  * **Any K8s / On-Prem**: Keyless Workload Identity Federation (WIF) pointing directly to your `credential-configuration.json` file.
-* **No Autoscaling**: Explicitly does not deploy any HorizontalPodAutoscaler (HPA).
-
 ---
 
 ## Directory Structure
 
-Every mode directory uses standard, predictable numbered file naming:
+* **`k8s/base/`**: The foundational manifests deploying the collector as a **Deployment** with a **Service**, **HPA**, and native support for both **GKE** and **On-Prem (WIF)**.
+* **`k8s/gateway/`**: Reuses `k8s/base/` to deploy the collector configured specifically as a multi-replica ingestion **Gateway** (`replicas: 2`), inheriting namespace, RBAC, config, HPA, and WIF support.
+* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node with `/var/log/pods` host mounts and node tolerations), inheriting namespace, RBAC, config, and WIF support.
 
 ```
 k8s/
-├── gateway/
+├── base/                       # Base Deployment + Service + HPA
 │   ├── 0_namespace.yaml
 │   ├── 1_configmap.yaml
 │   ├── 2_rbac.yaml
 │   ├── 3_service.yaml
-│   ├── 4_gateway.yaml          # Deployment (replicas: 2)
-│   ├── 5_wif.yaml              # WIF patch for non-GKE clusters
-│   └── kustomization.yaml
+│   ├── 4_deployment.yaml       # Deployment with WIF / GKE support
+│   ├── 5_hpa.yaml              # HorizontalPodAutoscaler
+│   └── kustomization.yml
 │
-├── deployment/
-│   ├── 0_namespace.yaml
-│   ├── 1_configmap.yaml
-│   ├── 2_rbac.yaml
-│   ├── 3_service.yaml
-│   ├── 4_deployment.yaml       # Deployment (replicas: 1)
-│   ├── 5_wif.yaml              # WIF patch for non-GKE clusters
-│   └── kustomization.yaml
+├── gateway/                    # Reuses base, customized as a Gateway
+│   ├── 4_gateway.yaml          # Gateway configuration (replicas: 2)
+│   └── kustomization.yaml      # Inherits base
 │
-└── daemonset/
-    ├── 0_namespace.yaml
-    ├── 1_configmap.yaml
-    ├── 2_rbac.yaml
-    ├── 3_service.yaml
+└── daemonset/                  # Reuses base, customized as a DaemonSet
     ├── 4_daemonset.yaml        # DaemonSet (runs on all nodes)
-    ├── 5_wif.yaml              # WIF patch for non-GKE clusters
-    └── kustomization.yaml
+    └── kustomization.yaml      # Inherits base
 ```
 
 ---
 
 ## Deploying on GKE (Default)
 
-On GKE with Workload Identity enabled, no credentials file is needed.
+On GKE with Workload Identity enabled, no credentials file is needed. If no WIF file path is supplied, the collector automatically assumes GKE and authenticates via the GKE metadata server.
 
-### 1. Set Environment Variables
+### 1. Set Required Environment Variables
 ```bash
 export GOOGLE_CLOUD_PROJECT="<your-gcp-project-id>"
 export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
 
-# Grant IAM permissions to the collector's Kubernetes ServiceAccount:
+# Grant IAM permissions to the Kubernetes ServiceAccount:
 gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
     --role=roles/logging.logWriter \
     --member=principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$GOOGLE_CLOUD_PROJECT.svc.id.goog/subject/ns/opentelemetry/sa/opentelemetry-collector \
@@ -76,29 +58,28 @@ gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
 
 ### 2. Apply the Manifests
 
-* **Gateway Mode:**
+* **Base Deployment:**
+  ```bash
+  kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base | envsubst | kubectl apply -f -
+  ```
+
+* **Gateway Mode (Multi-Replica Ingestion Gateway):**
   ```bash
   kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/gateway | envsubst | kubectl apply -f -
   ```
 
-* **Deployment Mode:**
-  ```bash
-  kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/deployment | envsubst | kubectl apply -f -
-  ```
-
-* **DaemonSet Mode:**
+* **DaemonSet Mode (Per-Node Agent):**
   ```bash
   kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/daemonset | envsubst | kubectl apply -f -
   ```
 
 ---
 
-## Deploying on Any K8s / On-Prem with Workload Identity Federation (WIF)
+## Deploying On-Prem / Non-GKE with Workload Identity Federation (WIF)
 
-For non-GKE clusters, you do **not** need service account keys. Point directly to your generated `credential-configuration.json` file.
+For on-prem or non-GKE clusters, you do **not** need service account keys. Supply your generated `credential-configuration.json` file path.
 
-### 1. Create the ConfigMap Pointing to Your WIF File
-Point to the path of your WIF credential file:
+### 1. Supply Your WIF File Path to Create the ConfigMap
 ```bash
 export WIF_FILE_PATH="/path/to/credential-configuration.json"
 
@@ -107,53 +88,40 @@ kubectl create configmap gcp-wif-config \
   -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-### 2. Apply the Manifests with the WIF Patch (`5_wif.yaml`)
-
-Set your Workload Identity Pool / Provider audience:
+### 2. Set WIF Environment Variables
 ```bash
 export GOOGLE_CLOUD_PROJECT="<your-gcp-project-id>"
 export PROJECT_NUMBER="<your-project-number>"
 export POOL_ID="<your-pool-id>"
 export PROVIDER_ID="<your-provider-id>"
+export GOOGLE_APPLICATION_CREDENTIALS="/etc/gcp/credential-configuration.json"
 ```
 
-* **Gateway Mode with WIF:**
+### 3. Apply the Desired Mode
+
+* **Base Deployment (with WIF):**
+  ```bash
+  kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base | envsubst | kubectl apply -f -
+  ```
+
+* **Gateway Mode (with WIF):**
   ```bash
   kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/gateway | envsubst | kubectl apply -f -
-  envsubst < k8s/gateway/5_wif.yaml | kubectl apply -f -
   ```
 
-* **Deployment Mode with WIF:**
-  ```bash
-  kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/deployment | envsubst | kubectl apply -f -
-  envsubst < k8s/deployment/5_wif.yaml | kubectl apply -f -
-  ```
-
-* **DaemonSet Mode with WIF:**
+* **DaemonSet Mode (with WIF):**
   ```bash
   kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/daemonset | envsubst | kubectl apply -f -
-  envsubst < k8s/daemonset/5_wif.yaml | kubectl apply -f -
   ```
-
-Alternatively, when customizing locally with Kustomize, you can specify your WIF file path in `kustomization.yaml`:
-```yaml
-configMapGenerator:
-  - name: gcp-wif-config
-    files:
-      - credential-configuration.json=/path/to/credential-configuration.json
-
-patches:
-  - path: 5_wif.yaml
-```
 
 ---
 
-## Upgrading the Collector Image
+## Upgrading the Collector Image Version
 
-To upgrade the collector version without modifying YAML files:
+To update the collector image version at any time:
 
 ```bash
-# For Gateway or Deployment:
+# For Base Deployment or Gateway:
 kubectl set image deployment/opentelemetry-collector \
   opentelemetry-collector=us-docker.pkg.dev/my-project/collector:v0.2.0 \
   -n opentelemetry

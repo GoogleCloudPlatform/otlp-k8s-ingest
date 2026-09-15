@@ -19,56 +19,11 @@ metadata:
   namespace: opentelemetry
   labels:
     app: opentelemetry-collector
+    app.kubernetes.io/component: gateway
 spec:
   replicas: 2
-  selector:
-    matchLabels:
-      app: opentelemetry-collector
   template:
     metadata:
       labels:
         app: opentelemetry-collector
-    spec:
-      serviceAccountName: opentelemetry-collector
-      securityContext:
-        {}
-      containers:
-        - name: opentelemetry-collector
-          imagePullPolicy: Always
-          image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
-          args:
-            - "--config=/conf/collector.yaml"
-            - "--feature-gates=exporter.googlemanagedprometheus.intToDouble,receiver.prometheusreceiver.RemoveStartTimeAdjustment"
-          ports:
-            - name: otlp-grpc
-              containerPort: 4317
-              protocol: TCP
-            - name: otlp-http
-              containerPort: 4318
-              protocol: TCP
-          env:
-            - name: MY_POD_IP
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: status.podIP
-          resources:
-            requests:
-              memory: "200Mi"
-              cpu: "200m"
-            limits:
-              memory: "400Mi"
-          volumeMounts:
-            - name: collector-config
-              mountPath: /conf
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 13133
-      volumes:
-        - name: collector-config
-          configMap:
-            name: collector-config
-            items:
-              - key: collector.yaml
-                path: collector.yaml
+        app.kubernetes.io/component: gateway
