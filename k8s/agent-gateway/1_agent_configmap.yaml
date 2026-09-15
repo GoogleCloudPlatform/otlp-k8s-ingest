@@ -1,0 +1,113 @@
+apiVersion: v1
+data:
+  agent-collector.yaml: |
+    # Copyright 2024 Google LLC
+    #
+    # Licensed under the Apache License, Version 2.0 (the "License");
+    # you may not use this file except in compliance with the License.
+    # You may obtain a copy of the License at
+    #
+    #     http://www.apache.org/licenses/LICENSE-2.0
+    #
+    # Unless required by applicable law or agreed to in writing, software
+    # distributed under the License is distributed on an "AS IS" BASIS,
+    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    # See the License for the specific language governing permissions and
+    # limitations under the License.
+
+    # Agent-tier configuration, used by the DaemonSet in the agent/gateway topology.
+    #
+    # Each node's agent receives OTLP from workloads on that node and forwards it to
+    # the in-cluster gateway, which is the only tier that talks to Google Cloud.
+    # Because the agent never exports to Google, it needs no Google credentials and
+    # no googleclientauth extension.
+
+    exporters:
+      # Forward to the gateway Service. Plaintext is appropriate here: the hop stays
+      # inside the cluster network and never leaves it. The gateway performs the
+      # authenticated egress to Google Cloud.
+      otlp/gateway:
+        endpoint: ${env:GATEWAY_ENDPOINT}
+        tls:
+          insecure: true
+
+    extensions:
+      health_check:
+        endpoint: ${env:MY_POD_IP}:13133
+
+    processors:
+      batch:
+        send_batch_max_size: 200
+        send_batch_size: 200
+        timeout: 5s
+
+      # passthrough mode is REQUIRED in the agent/gateway topology.
+      #
+      # In passthrough mode the agent performs no Kubernetes API lookups and adds no
+      # metadata; it only stamps the source workload's IP as the k8s.pod.ip resource
+      # attribute. The gateway's own k8sattributes processor then keys off that
+      # attribute to do the association.
+      #
+      # Without this, the gateway would associate telemetry using the IP of the TCP
+      # connection it received it on -- which is the agent's pod IP -- and every
+      # signal in the cluster would be mislabelled as originating from the agent.
+      k8sattributes:
+        passthrough: true
+
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 65
+        spike_limit_percentage: 20
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            cors:
+              allowed_origins:
+              - http://*
+              - https://*
+            endpoint: ${env:MY_POD_IP}:4318
+
+    service:
+      extensions:
+      - health_check
+      pipelines:
+        # memory_limiter is deliberately first in every pipeline so that it can shed
+        # load before any other processor does work on the data.
+        logs:
+          exporters:
+          - otlp/gateway
+          processors:
+          - memory_limiter
+          - k8sattributes
+          - batch
+          receivers:
+          - otlp
+        metrics:
+          exporters:
+          - otlp/gateway
+          processors:
+          - memory_limiter
+          - k8sattributes
+          - batch
+          receivers:
+          - otlp
+        traces:
+          exporters:
+          - otlp/gateway
+          processors:
+          - memory_limiter
+          - k8sattributes
+          - batch
+          receivers:
+          - otlp
+      telemetry:
+        logs:
+          encoding: json
+kind: ConfigMap
+metadata:
+  name: agent-collector-config
+  namespace: opentelemetry

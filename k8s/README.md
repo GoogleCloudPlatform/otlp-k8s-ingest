@@ -8,7 +8,18 @@ This directory contains clean, modular Kubernetes manifests for deploying the Op
 
 * **`k8s/base/`**: The foundational manifests deploying the collector as a **Deployment** with a **Service**, **HPA**, and native support for both **GKE** and **On-Prem (WIF)**.
 * **`k8s/gateway/`**: Reuses `k8s/base/` to deploy the collector configured specifically as a multi-replica ingestion **Gateway** (HPA `minReplicas: 2`), inheriting namespace, RBAC, config, HPA, and WIF support.
-* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node, with control-plane node tolerations), inheriting namespace, RBAC, config, and WIF support. The HPA from the base is dropped, since a DaemonSet is scaled by the node count.
+* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node, with control-plane node tolerations), inheriting namespace, RBAC, config, and WIF support. The HPA from the base is dropped, since a DaemonSet is scaled by the node count. Each node's collector exports **directly** to Google.
+* **`k8s/agent-gateway/`**: The **agent/gateway topology**. A per-node DaemonSet receives OTLP from workloads on its own node and forwards to the gateway (the Deployment from `k8s/base`, with its HPA floor raised to 2); only the gateway egresses to Google Cloud.
+
+  ```
+  workloads --> agent DaemonSet (node-local) --> gateway Deployment --> Google Cloud
+  ```
+
+  Notes on this overlay:
+  * The agent uses its own config (`config/agent-collector.yaml`), which runs `k8sattributes` in **passthrough** mode. This is required: without it the gateway would attribute all telemetry to the agent's pod IP (the IP of the connection it received the data on) rather than to the originating workload.
+  * The agent needs **no RBAC and no Google credentials** — it makes no Kubernetes API calls and never talks to Google.
+  * Agent names and labels are suffixed `-agent` so the gateway's Service selector cannot match agent pods, which would otherwise make agents forward to themselves.
+  * The agent exposes `hostPort` 4317/4318 so workloads can reach their node-local agent at `$(HOST_IP)`. **`hostPort` is rejected by GKE Autopilot and by restricted Pod Security Standards** — on those clusters, remove the `hostPort` fields and have workloads send to the gateway Service directly.
 
 ```
 k8s/
