@@ -48,7 +48,7 @@ spec:
           image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
           args:
             - "--config=googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}"
-            - "--config=${CONFIG_FILE_PATH}"
+            - "--config=/etc/otelcol/config.yaml"
           ports:
             - name: otlp-grpc
               containerPort: 4317
@@ -73,8 +73,6 @@ spec:
               value: "${FLEET_ID}"
             - name: OPTIONAL_PROJECT_ID
               value: "${OPTIONAL_PROJECT_ID}"
-            - name: CONFIG_FILE_PATH
-              value: "${CONFIG_FILE_PATH}"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: "${GOOGLE_APPLICATION_CREDENTIALS}"
           resources:

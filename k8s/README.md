@@ -34,34 +34,64 @@ k8s/
 
 ## Project Tango / Control Plane Configuration
 
-The collector runs with the `googlecontrolplane` configuration provider alongside a local configuration file:
+The collector runs with the `googlecontrolplane` configuration provider alongside a local configuration file mounted at `/etc/otelcol/config.yaml`:
 
 ```bash
 otelcol \
   --config "googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}" \
-  --config "${CONFIG_FILE_PATH}"
+  --config /etc/otelcol/config.yaml
 ```
 
 * **Control Plane Address (`CONTROL_PLANE_ADDRESS`)**: The xDS endpoint for Telemetry Director (default: `telemetrydirector.googleapis.com`).
 * **Fleet ID (`FLEET_ID`)**: The fleet identifier the collector subscribes to.
 * **Destination Project (`OPTIONAL_PROJECT_ID`)**: Optional GCP project where telemetry is routed.
-* **Config File Path (`CONFIG_FILE_PATH`)**: Path to the configuration file inside the container (e.g. `/etc/otelcol/config.yaml` or custom path).
 
-### Supplying a Custom Config YAML File (Optional)
+---
 
-If not supplied, the built-in default configuration in `k8s/base/1_configmap.yaml` is mounted at `/etc/otelcol/config.yaml`.
+## Supplying Your Own Collector Configuration (Optional)
 
-To supply your own custom `config.yaml`:
+By default, the manifests deploy the built-in configuration from `k8s/base/1_configmap.yaml`. If you have your own collector configuration file (e.g. `my-config.yaml`) that you want the collector to run with, you can supply it in one of two ways:
 
-```bash
-export LOCAL_CONFIG_PATH="/path/to/your/custom-config.yaml"
+### Option 1: Via Kustomize Overlay (Recommended for GitOps)
 
-kubectl create configmap collector-config \
-  --from-file=config.yaml="${LOCAL_CONFIG_PATH}" \
-  -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
+Create a local `kustomization.yaml` referencing this repo and your local file:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Or /gateway or /daemonset
+  - https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base
+
+configMapGenerator:
+  - name: collector-config
+    behavior: replace
+    files:
+      - config.yaml=/path/to/my-config.yaml
 ```
 
-Then specify `export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"` (or your custom mounted path).
+Then build and apply:
+```bash
+kubectl kustomize . | envsubst | kubectl apply -f -
+```
+
+### Option 2: Via kubectl CLI
+
+Apply the manifests, then overwrite the `collector-config` ConfigMap with your local file:
+
+```bash
+# 1. Apply the manifests
+kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base | envsubst | kubectl apply -f -
+
+# 2. Update the ConfigMap from your local file
+kubectl create configmap collector-config \
+  --from-file=config.yaml="/path/to/my-config.yaml" \
+  -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
+
+# 3. Restart the collector to load the new config
+kubectl rollout restart deployment/opentelemetry-collector -n opentelemetry
+```
 
 ---
 
@@ -78,7 +108,6 @@ export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --forma
 export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
 export FLEET_ID="<your-fleet-id>"
 export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
-export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"
 
 # Grant IAM permissions to the Kubernetes ServiceAccount:
 gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
@@ -139,7 +168,6 @@ export GOOGLE_APPLICATION_CREDENTIALS="/etc/gcp/credential-configuration.json"
 export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
 export FLEET_ID="<your-fleet-id>"
 export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
-export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"
 ```
 
 ### 3. Apply the Desired Mode
