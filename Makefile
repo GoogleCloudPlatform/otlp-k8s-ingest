@@ -43,7 +43,7 @@ $(TOOLS)/kubectl: $(TOOLS)
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL)
 
-MANIFEST_DIRS ?= k8s/base/* k8s/gateway/* k8s/daemonset/* k8s/agent-gateway/*
+MANIFEST_DIRS ?= k8s/base/* k8s/gateway/* k8s/daemonset/*
 OTEL_COLLECTOR_VERSION ?= $(GBOC_VERSION)
 .PHONY: update-otel-version
 update-otel-version:
@@ -64,7 +64,7 @@ update-manifests-version:
 .PHONY: generate
 generate: tools
 	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
-	$(KUBECTL) create configmap agent-collector-config -n opentelemetry --from-file=./config/agent-collector.yaml -o yaml --dry-run > ./k8s/agent-gateway/1_agent_configmap.yaml
+	$(KUBECTL) create configmap agent-collector-config -n opentelemetry --from-file=./config/agent-collector.yaml -o yaml --dry-run > ./k8s/gateway/1_agent_configmap.yaml
 	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
 	cat test/fixtures/spans_input.json | $(JQ) -c > k8s/overlays/test/spans_fixture.json
 	cat test/fixtures/metrics_input.json | $(JQ) -c > k8s/overlays/test/metrics_fixture.json

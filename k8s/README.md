@@ -6,55 +6,39 @@ This directory contains clean, modular Kubernetes manifests for deploying the Op
 
 ## Which directory do I apply?
 
-Apply exactly **one** of `gateway/`, `daemonset/`, or `agent-gateway/`. They all create
-resources with the same names in the same namespace, so they are alternatives, not
-building blocks to combine. `base/` is machinery the others build on.
+There are three choices. Apply exactly **one** — they create resources with the same names in
+the same namespace, so they are alternatives, not building blocks to combine.
 
-| Directory | Apply it? | What runs | Who talks to Google |
-| --- | --- | --- | --- |
-| **`base/`** | Rarely — it's the shared foundation | 1 collector Deployment | The Deployment |
-| **`gateway/`** | Yes | A single HA collector tier (HPA floor 2) | The gateway |
-| **`daemonset/`** | Yes | One collector per node, independent of each other | **Every node's collector** |
-| **`agent-gateway/`** | Yes | One collector per node **plus** an HA gateway tier | Only the gateway |
-
-### `gateway/` vs `agent-gateway/` — the common confusion
-
-They are not two different gateways. **`agent-gateway/` is literally `gateway/` plus an agent
-tier in front of it** — it lists `../gateway` as its base and adds exactly two objects (the
-agent DaemonSet and its ConfigMap). The gateway tier the two produce is identical.
+| Directory | What it deploys | Who talks to Google |
+| --- | --- | --- |
+| **`base/`** | A single collector. Workloads send OTLP straight to it. | The collector |
+| **`gateway/`** | A per-node agent tier in front of a highly available gateway tier. | Only the gateway |
+| **`daemonset/`** | One collector per node, each independent. | Every node's collector |
 
 ```
-gateway/            workloads ─────────────────────────────▶ gateway ──▶ Google Cloud
-                    (every pod sends to the gateway Service)
+base/         workloads ──────────────────────────▶ collector ──▶ Google Cloud
 
-agent-gateway/      workloads ──▶ node-local agent ────────▶ gateway ──▶ Google Cloud
-                    (pods send to their own node)
+gateway/      workloads ──▶ node-local agent ────▶ gateway ────▶ Google Cloud
+
+daemonset/    workloads ──▶ node collector ──────────────────▶ Google Cloud
 ```
 
-Pick `gateway/` for simplicity: one tier, fewer moving parts.
+**`base/`** is the simplest thing that works, and it is also the foundation the other two build
+on. Use it when one collector is enough.
 
-Pick `agent-gateway/` when you want the properties an agent tier buys you: telemetry leaves
-the node it came from without a network hop first, a node's failure only affects that node,
-and per-node batching reduces the connection count the gateway sees. The cost is roughly one
-extra collector pod per node.
+**`gateway/`** is the OpenTelemetry-recommended production architecture. An agent on each node
+receives that node's telemetry and forwards it to the gateway, which is the only tier holding
+credentials and the only one connecting to Google. You get a single place to apply policy,
+per-node batching, and far fewer connections to Google. The cost is roughly one extra collector
+pod per node.
 
-### `daemonset/` vs `agent-gateway/`
-
-Both run a collector on every node; the difference is where the data goes next.
-
-```
-daemonset/          workloads ──▶ node collector ──▶ Google Cloud   (one egress per node)
-
-agent-gateway/      workloads ──▶ node agent ──▶ gateway ──▶ Google Cloud   (one egress point)
-```
-
-`daemonset/` gives every node its own egress path and its own credentials. `agent-gateway/`
-funnels everything through the gateway, which is usually what you want: a single place to
-apply policy, a single set of credentials, and far fewer connections to Google.
+**`daemonset/`** also runs a collector per node, but each one exports to Google on its own.
+Choose it when you specifically want no central tier; otherwise `gateway/` is usually the better
+per-node option.
 
 ```
 k8s/
-├── base/                       # Shared foundation: Deployment + Service + HPA + RBAC
+├── base/                       # A single collector: Deployment + Service + HPA + RBAC
 │   ├── 0_namespace.yaml
 │   ├── 1_configmap.yaml
 │   ├── 2_rbac.yaml
@@ -63,21 +47,18 @@ k8s/
 │   ├── 5_hpa.yaml              # HorizontalPodAutoscaler
 │   └── kustomization.yml
 │
-├── gateway/                    # = base, made highly available
-│   ├── 4_gateway.yaml          # component label + HPA minReplicas: 2
+├── gateway/                    # Agent tier + gateway tier
+│   ├── 1_agent_configmap.yaml  # generated from config/agent-collector.yaml
+│   ├── 4_agent_daemonset.yaml  # per-node agent; forwards to the gateway Service
+│   ├── 4_gateway.yaml          # makes the base Deployment the gateway (HPA floor 2)
 │   └── kustomization.yaml      # inherits ../base
 │
-├── daemonset/                  # = base, reshaped into a per-node DaemonSet
-│   ├── 4_daemonset.yaml        # DaemonSet; exports straight to Google
-│   └── kustomization.yaml      # inherits ../base, drops the Deployment + HPA
-│
-└── agent-gateway/              # = gateway, with a per-node agent tier in front
-    ├── 1_agent_configmap.yaml  # generated from config/agent-collector.yaml
-    ├── 4_agent_daemonset.yaml  # agent DaemonSet; forwards to the gateway Service
-    └── kustomization.yaml      # inherits ../gateway
+└── daemonset/                  # One collector per node, each exporting to Google
+    ├── 4_daemonset.yaml
+    └── kustomization.yaml      # inherits ../base, drops the Deployment + HPA
 ```
 
-### Notes on `agent-gateway/`
+### Notes on the agent tier in `gateway/`
 
 * The agent uses its own config (`config/agent-collector.yaml`), which runs `k8sattributes` in
   **passthrough** mode. This is required: without it the gateway would attribute all telemetry
