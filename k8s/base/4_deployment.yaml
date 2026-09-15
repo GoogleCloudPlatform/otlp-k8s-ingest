@@ -35,8 +35,6 @@ spec:
         - name: opentelemetry-collector
           imagePullPolicy: Always
           image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
-          command:
-            - "/usr/bin/otelcol"
           args:
             - "--config=googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}"
             - "--config=/etc/otelcol/config.yaml"
