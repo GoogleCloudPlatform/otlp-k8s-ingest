@@ -12,52 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Agent/gateway topology: a per-node DaemonSet forwards to a multi-replica
-# in-cluster gateway, and only the gateway egresses to Google Cloud.
+# Agent/gateway topology = ../gateway + a per-node agent tier in front of it.
 #
-#   workloads --> agent DaemonSet (node-local) --> gateway Deployment --> Google
+#   workloads --> agent DaemonSet (node-local) --> gateway --> Google Cloud
 #
-# The gateway is the Deployment, Service, and HPA inherited from ../base, with
-# its config unchanged -- the base already IS a gateway, this overlay only makes
-# it highly available and puts an agent tier in front of it.
+# This overlay builds on ../gateway rather than ../base, so the gateway tier is
+# defined in exactly one place. Everything below is purely the agent tier; if
+# you want to change the gateway, edit ../gateway.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../base
+  - ../gateway
   - 1_agent_configmap.yaml
   - 4_agent_daemonset.yaml
-
-patches:
-  # Raise the gateway's replica floor. The gateway is now the single egress path
-  # for every node's telemetry, so a single replica would be a cluster-wide
-  # point of failure. `replicas` is deliberately not set on the Deployment --
-  # the HPA owns it.
-  - target:
-      kind: HorizontalPodAutoscaler
-      name: opentelemetry-collector
-    patch: |-
-      apiVersion: autoscaling/v2
-      kind: HorizontalPodAutoscaler
-      metadata:
-        name: opentelemetry-collector
-      spec:
-        minReplicas: 2
-  # Label the gateway tier for clarity. Only the pod template and metadata are
-  # touched; the selector is left alone because Deployment selectors are
-  # immutable once created.
-  - target:
-      kind: Deployment
-      name: opentelemetry-collector
-    patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: opentelemetry-collector
-        labels:
-          app.kubernetes.io/component: gateway
-      spec:
-        template:
-          metadata:
-            labels:
-              app.kubernetes.io/component: gateway

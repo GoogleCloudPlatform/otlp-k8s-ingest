@@ -4,26 +4,57 @@ This directory contains clean, modular Kubernetes manifests for deploying the Op
 
 ---
 
-## Directory Structure
+## Which directory do I apply?
 
-* **`k8s/base/`**: The foundational manifests deploying the collector as a **Deployment** with a **Service**, **HPA**, and native support for both **GKE** and **On-Prem (WIF)**.
-* **`k8s/gateway/`**: Reuses `k8s/base/` to deploy the collector configured specifically as a multi-replica ingestion **Gateway** (HPA `minReplicas: 2`), inheriting namespace, RBAC, config, HPA, and WIF support.
-* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node, with control-plane node tolerations), inheriting namespace, RBAC, config, and WIF support. The HPA from the base is dropped, since a DaemonSet is scaled by the node count. Each node's collector exports **directly** to Google.
-* **`k8s/agent-gateway/`**: The **agent/gateway topology**. A per-node DaemonSet receives OTLP from workloads on its own node and forwards to the gateway (the Deployment from `k8s/base`, with its HPA floor raised to 2); only the gateway egresses to Google Cloud.
+Apply exactly **one** of `gateway/`, `daemonset/`, or `agent-gateway/`. They all create
+resources with the same names in the same namespace, so they are alternatives, not
+building blocks to combine. `base/` is machinery the others build on.
 
-  ```
-  workloads --> agent DaemonSet (node-local) --> gateway Deployment --> Google Cloud
-  ```
+| Directory | Apply it? | What runs | Who talks to Google |
+| --- | --- | --- | --- |
+| **`base/`** | Rarely — it's the shared foundation | 1 collector Deployment | The Deployment |
+| **`gateway/`** | Yes | A single HA collector tier (HPA floor 2) | The gateway |
+| **`daemonset/`** | Yes | One collector per node, independent of each other | **Every node's collector** |
+| **`agent-gateway/`** | Yes | One collector per node **plus** an HA gateway tier | Only the gateway |
 
-  Notes on this overlay:
-  * The agent uses its own config (`config/agent-collector.yaml`), which runs `k8sattributes` in **passthrough** mode. This is required: without it the gateway would attribute all telemetry to the agent's pod IP (the IP of the connection it received the data on) rather than to the originating workload.
-  * The agent needs **no RBAC and no Google credentials** — it makes no Kubernetes API calls and never talks to Google.
-  * Agent names and labels are suffixed `-agent` so the gateway's Service selector cannot match agent pods, which would otherwise make agents forward to themselves.
-  * The agent exposes `hostPort` 4317/4318 so workloads can reach their node-local agent at `$(HOST_IP)`. **`hostPort` is rejected by GKE Autopilot and by restricted Pod Security Standards** — on those clusters, remove the `hostPort` fields and have workloads send to the gateway Service directly.
+### `gateway/` vs `agent-gateway/` — the common confusion
+
+They are not two different gateways. **`agent-gateway/` is literally `gateway/` plus an agent
+tier in front of it** — it lists `../gateway` as its base and adds exactly two objects (the
+agent DaemonSet and its ConfigMap). The gateway tier the two produce is identical.
+
+```
+gateway/            workloads ─────────────────────────────▶ gateway ──▶ Google Cloud
+                    (every pod sends to the gateway Service)
+
+agent-gateway/      workloads ──▶ node-local agent ────────▶ gateway ──▶ Google Cloud
+                    (pods send to their own node)
+```
+
+Pick `gateway/` for simplicity: one tier, fewer moving parts.
+
+Pick `agent-gateway/` when you want the properties an agent tier buys you: telemetry leaves
+the node it came from without a network hop first, a node's failure only affects that node,
+and per-node batching reduces the connection count the gateway sees. The cost is roughly one
+extra collector pod per node.
+
+### `daemonset/` vs `agent-gateway/`
+
+Both run a collector on every node; the difference is where the data goes next.
+
+```
+daemonset/          workloads ──▶ node collector ──▶ Google Cloud   (one egress per node)
+
+agent-gateway/      workloads ──▶ node agent ──▶ gateway ──▶ Google Cloud   (one egress point)
+```
+
+`daemonset/` gives every node its own egress path and its own credentials. `agent-gateway/`
+funnels everything through the gateway, which is usually what you want: a single place to
+apply policy, a single set of credentials, and far fewer connections to Google.
 
 ```
 k8s/
-├── base/                       # Base Deployment + Service + HPA
+├── base/                       # Shared foundation: Deployment + Service + HPA + RBAC
 │   ├── 0_namespace.yaml
 │   ├── 1_configmap.yaml
 │   ├── 2_rbac.yaml
@@ -32,14 +63,34 @@ k8s/
 │   ├── 5_hpa.yaml              # HorizontalPodAutoscaler
 │   └── kustomization.yml
 │
-├── gateway/                    # Reuses base, customized as a Gateway
-│   ├── 4_gateway.yaml          # Gateway configuration (replicas: 2)
-│   └── kustomization.yaml      # Inherits base
+├── gateway/                    # = base, made highly available
+│   ├── 4_gateway.yaml          # component label + HPA minReplicas: 2
+│   └── kustomization.yaml      # inherits ../base
 │
-└── daemonset/                  # Reuses base, customized as a DaemonSet
-    ├── 4_daemonset.yaml        # DaemonSet (runs on all nodes)
-    └── kustomization.yaml      # Inherits base
+├── daemonset/                  # = base, reshaped into a per-node DaemonSet
+│   ├── 4_daemonset.yaml        # DaemonSet; exports straight to Google
+│   └── kustomization.yaml      # inherits ../base, drops the Deployment + HPA
+│
+└── agent-gateway/              # = gateway, with a per-node agent tier in front
+    ├── 1_agent_configmap.yaml  # generated from config/agent-collector.yaml
+    ├── 4_agent_daemonset.yaml  # agent DaemonSet; forwards to the gateway Service
+    └── kustomization.yaml      # inherits ../gateway
 ```
+
+### Notes on `agent-gateway/`
+
+* The agent uses its own config (`config/agent-collector.yaml`), which runs `k8sattributes` in
+  **passthrough** mode. This is required: without it the gateway would attribute all telemetry
+  to the agent's pod IP — the IP of the connection it received the data on — rather than to the
+  originating workload.
+* The agent needs **no RBAC and no Google credentials**: it makes no Kubernetes API calls and
+  never talks to Google.
+* Agent names and labels are suffixed `-agent` so the gateway's Service selector cannot match
+  agent pods, which would otherwise make agents forward to themselves.
+* The agent exposes `hostPort` 4317/4318 so workloads can reach their node-local agent at
+  `$(HOST_IP)`. **`hostPort` is rejected by GKE Autopilot and by restricted Pod Security
+  Standards** — on those clusters, remove the `hostPort` fields and have workloads send to the
+  gateway Service directly.
 
 ---
 
