@@ -37,27 +37,31 @@ k8s/
 The collector runs with the `googlecontrolplane` configuration provider alongside a local configuration file:
 
 ```bash
-/usr/bin/otelcol \
+otelcol \
   --config "googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}" \
-  --config /etc/otelcol/config.yaml
+  --config "${CONFIG_FILE_PATH}"
 ```
 
 * **Control Plane Address (`CONTROL_PLANE_ADDRESS`)**: The xDS endpoint for Telemetry Director (default: `telemetrydirector.googleapis.com`).
 * **Fleet ID (`FLEET_ID`)**: The fleet identifier the collector subscribes to.
 * **Destination Project (`OPTIONAL_PROJECT_ID`)**: Optional GCP project where telemetry is routed.
-* **Config YAML (`/etc/otelcol/config.yaml`)**: Custom or default collector configuration.
+* **Config File Path (`CONFIG_FILE_PATH`)**: Path to the configuration file inside the container (e.g. `/etc/otelcol/config.yaml` or custom path).
 
 ### Supplying a Custom Config YAML File (Optional)
 
-If not supplied, the built-in default configuration in `k8s/base/1_configmap.yaml` is used automatically. To supply your own custom `config.yaml`:
+If not supplied, the built-in default configuration in `k8s/base/1_configmap.yaml` is mounted at `/etc/otelcol/config.yaml`.
+
+To supply your own custom `config.yaml`:
 
 ```bash
-export CONFIG_FILE_PATH="/path/to/your/custom-config.yaml"
+export LOCAL_CONFIG_PATH="/path/to/your/custom-config.yaml"
 
 kubectl create configmap collector-config \
-  --from-file=config.yaml="${CONFIG_FILE_PATH}" \
+  --from-file=config.yaml="${LOCAL_CONFIG_PATH}" \
   -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
 ```
+
+Then specify `export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"` (or your custom mounted path).
 
 ---
 
@@ -74,6 +78,7 @@ export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --forma
 export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
 export FLEET_ID="<your-fleet-id>"
 export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
+export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"
 
 # Grant IAM permissions to the Kubernetes ServiceAccount:
 gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
@@ -134,6 +139,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/etc/gcp/credential-configuration.json"
 export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
 export FLEET_ID="<your-fleet-id>"
 export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
+export CONFIG_FILE_PATH="/etc/otelcol/config.yaml"
 ```
 
 ### 3. Apply the Desired Mode
