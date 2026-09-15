@@ -34,64 +34,17 @@ k8s/
 
 ## Project Tango / Control Plane Configuration
 
-The collector runs with the `googlecontrolplane` configuration provider alongside a local configuration file mounted at `/etc/otelcol/config.yaml`:
+The collector runs with the `googlecontrolplane` configuration provider alongside the built-in default configuration (`/conf/collector.yaml` mounted from `1_configmap.yaml`):
 
 ```bash
 otelcol \
   --config "googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}" \
-  --config /etc/otelcol/config.yaml
+  --config /conf/collector.yaml
 ```
 
 * **Control Plane Address (`CONTROL_PLANE_ADDRESS`)**: The xDS endpoint for Telemetry Director (default: `telemetrydirector.googleapis.com`).
 * **Fleet ID (`FLEET_ID`)**: The fleet identifier the collector subscribes to.
 * **Destination Project (`OPTIONAL_PROJECT_ID`)**: Optional GCP project where telemetry is routed.
-
----
-
-## Supplying Your Own Collector Configuration (Optional)
-
-By default, the manifests deploy the built-in configuration from `k8s/base/1_configmap.yaml`. If you have your own collector configuration file (e.g. `my-config.yaml`) that you want the collector to run with, you can supply it in one of two ways:
-
-### Option 1: Via Kustomize Overlay (Recommended for GitOps)
-
-Create a local `kustomization.yaml` referencing this repo and your local file:
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-  # Or /gateway or /daemonset
-  - https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base
-
-configMapGenerator:
-  - name: collector-config
-    behavior: replace
-    files:
-      - config.yaml=/path/to/my-config.yaml
-```
-
-Then build and apply:
-```bash
-kubectl kustomize . | envsubst | kubectl apply -f -
-```
-
-### Option 2: Via kubectl CLI
-
-Apply the manifests, then overwrite the `collector-config` ConfigMap with your local file:
-
-```bash
-# 1. Apply the manifests
-kubectl kustomize https://github.com/GoogleCloudPlatform/otlp-k8s-ingest.git/k8s/base | envsubst | kubectl apply -f -
-
-# 2. Update the ConfigMap from your local file
-kubectl create configmap collector-config \
-  --from-file=config.yaml="/path/to/my-config.yaml" \
-  -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
-
-# 3. Restart the collector to load the new config
-kubectl rollout restart deployment/opentelemetry-collector -n opentelemetry
-```
 
 ---
 
