@@ -6,6 +6,7 @@ resources:
   - 4_daemonset.yaml
 
 patches:
+  # The base ships a Deployment; this overlay replaces it with a DaemonSet.
   - target:
       kind: Deployment
       name: opentelemetry-collector
@@ -13,5 +14,17 @@ patches:
       $patch: delete
       apiVersion: apps/v1
       kind: Deployment
+      metadata:
+        name: opentelemetry-collector
+  # The base HPA scales the Deployment above. A DaemonSet is scaled by the
+  # node count, so the HPA would be left dangling at a resource that no
+  # longer exists (it would just emit FailedGetScale events forever).
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: opentelemetry-collector
+    patch: |-
+      $patch: delete
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
       metadata:
         name: opentelemetry-collector

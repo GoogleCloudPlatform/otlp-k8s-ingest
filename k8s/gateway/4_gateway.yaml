@@ -21,9 +21,20 @@ metadata:
     app: opentelemetry-collector
     app.kubernetes.io/component: gateway
 spec:
-  replicas: 2
+  # NOTE: `replicas` is intentionally omitted. The HorizontalPodAutoscaler
+  # inherited from ../base owns the replica count; setting it here would be
+  # overwritten by the HPA (and would flap on every `kubectl apply`).
+  # The 2-replica floor is expressed via the HPA patch below.
   template:
     metadata:
       labels:
         app: opentelemetry-collector
         app.kubernetes.io/component: gateway
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: opentelemetry-collector
+  namespace: opentelemetry
+spec:
+  minReplicas: 2

@@ -7,8 +7,8 @@ This directory contains clean, modular Kubernetes manifests for deploying the Op
 ## Directory Structure
 
 * **`k8s/base/`**: The foundational manifests deploying the collector as a **Deployment** with a **Service**, **HPA**, and native support for both **GKE** and **On-Prem (WIF)**.
-* **`k8s/gateway/`**: Reuses `k8s/base/` to deploy the collector configured specifically as a multi-replica ingestion **Gateway** (`replicas: 2`), inheriting namespace, RBAC, config, HPA, and WIF support.
-* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node with `/var/log/pods` host mounts and node tolerations), inheriting namespace, RBAC, config, and WIF support.
+* **`k8s/gateway/`**: Reuses `k8s/base/` to deploy the collector configured specifically as a multi-replica ingestion **Gateway** (HPA `minReplicas: 2`), inheriting namespace, RBAC, config, HPA, and WIF support.
+* **`k8s/daemonset/`**: Reuses `k8s/base/` to deploy the collector as a **DaemonSet** (1 pod per node, with control-plane node tolerations), inheriting namespace, RBAC, config, and WIF support. The HPA from the base is dropped, since a DaemonSet is scaled by the node count.
 
 ```
 k8s/

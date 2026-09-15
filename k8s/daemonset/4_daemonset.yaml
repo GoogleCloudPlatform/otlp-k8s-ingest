@@ -91,12 +91,6 @@ spec:
             - name: gcp-ksa-token
               mountPath: /var/run/secrets/tokens
               readOnly: true
-            - name: varlogpods
-              mountPath: /var/log/pods
-              readOnly: true
-            - name: varlogdocker
-              mountPath: /var/lib/docker/containers
-              readOnly: true
           readinessProbe:
             httpGet:
               path: /
@@ -119,9 +113,3 @@ spec:
                   path: gcp-ksa-token
                   expirationSeconds: 3600
                   audience: //iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}
-        - name: varlogpods
-          hostPath:
-            path: /var/log/pods
-        - name: varlogdocker
-          hostPath:
-            path: /var/lib/docker/containers
