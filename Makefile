@@ -62,7 +62,7 @@ update-manifests-version:
 
 .PHONY: generate
 generate: tools
-	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
+	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=config.yaml=./config/collector.yaml --from-file=collector.yaml=./config/collector.yaml -o yaml --dry-run=client > ./k8s/base/1_configmap.yaml
 	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
 	cat test/fixtures/spans_input.json | $(JQ) -c > k8s/overlays/test/spans_fixture.json
 	cat test/fixtures/metrics_input.json | $(JQ) -c > k8s/overlays/test/metrics_fixture.json

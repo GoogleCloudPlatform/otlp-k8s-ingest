@@ -32,6 +32,35 @@ k8s/
 
 ---
 
+## Project Tango / Control Plane Configuration
+
+The collector runs with the `googlecontrolplane` configuration provider alongside a local configuration file:
+
+```bash
+/usr/bin/otelcol \
+  --config "googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}" \
+  --config /etc/otelcol/config.yaml
+```
+
+* **Control Plane Address (`CONTROL_PLANE_ADDRESS`)**: The xDS endpoint for Telemetry Director (default: `telemetrydirector.googleapis.com`).
+* **Fleet ID (`FLEET_ID`)**: The fleet identifier the collector subscribes to.
+* **Destination Project (`OPTIONAL_PROJECT_ID`)**: Optional GCP project where telemetry is routed.
+* **Config YAML (`/etc/otelcol/config.yaml`)**: Custom or default collector configuration.
+
+### Supplying a Custom Config YAML File (Optional)
+
+If not supplied, the built-in default configuration in `k8s/base/1_configmap.yaml` is used automatically. To supply your own custom `config.yaml`:
+
+```bash
+export CONFIG_FILE_PATH="/path/to/your/custom-config.yaml"
+
+kubectl create configmap collector-config \
+  --from-file=config.yaml="${CONFIG_FILE_PATH}" \
+  -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
+```
+
+---
+
 ## Deploying on GKE (Default)
 
 On GKE with Workload Identity enabled, no credentials file is needed. If no WIF file path is supplied, the collector automatically assumes GKE and authenticates via the GKE metadata server.
@@ -40,6 +69,11 @@ On GKE with Workload Identity enabled, no credentials file is needed. If no WIF 
 ```bash
 export GOOGLE_CLOUD_PROJECT="<your-gcp-project-id>"
 export PROJECT_NUMBER=$(gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
+
+# Tango Control Plane & Fleet settings
+export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
+export FLEET_ID="<your-fleet-id>"
+export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
 
 # Grant IAM permissions to the Kubernetes ServiceAccount:
 gcloud projects add-iam-policy-binding projects/$GOOGLE_CLOUD_PROJECT \
@@ -88,13 +122,18 @@ kubectl create configmap gcp-wif-config \
   -n opentelemetry --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-### 2. Set WIF Environment Variables
+### 2. Set Environment Variables
 ```bash
 export GOOGLE_CLOUD_PROJECT="<your-gcp-project-id>"
 export PROJECT_NUMBER="<your-project-number>"
 export POOL_ID="<your-pool-id>"
 export PROVIDER_ID="<your-provider-id>"
 export GOOGLE_APPLICATION_CREDENTIALS="/etc/gcp/credential-configuration.json"
+
+# Tango Control Plane & Fleet settings
+export CONTROL_PLANE_ADDRESS="telemetrydirector.googleapis.com"
+export FLEET_ID="<your-fleet-id>"
+export OPTIONAL_PROJECT_ID="${GOOGLE_CLOUD_PROJECT}"
 ```
 
 ### 3. Apply the Desired Mode

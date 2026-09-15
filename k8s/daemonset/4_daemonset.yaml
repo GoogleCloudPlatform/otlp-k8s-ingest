@@ -46,9 +46,11 @@ spec:
         - name: opentelemetry-collector
           imagePullPolicy: Always
           image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
+          command:
+            - "/usr/bin/otelcol"
           args:
-            - "--config=/conf/collector.yaml"
-            - "--feature-gates=exporter.googlemanagedprometheus.intToDouble,receiver.prometheusreceiver.RemoveStartTimeAdjustment"
+            - "--config=googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}"
+            - "--config=/etc/otelcol/config.yaml"
           ports:
             - name: otlp-grpc
               containerPort: 4317
@@ -67,6 +69,12 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
+            - name: CONTROL_PLANE_ADDRESS
+              value: "${CONTROL_PLANE_ADDRESS}"
+            - name: FLEET_ID
+              value: "${FLEET_ID}"
+            - name: OPTIONAL_PROJECT_ID
+              value: "${OPTIONAL_PROJECT_ID}"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: "${GOOGLE_APPLICATION_CREDENTIALS}"
           resources:
@@ -76,6 +84,8 @@ spec:
             limits:
               memory: "400Mi"
           volumeMounts:
+            - name: collector-config
+              mountPath: /etc/otelcol
             - name: collector-config
               mountPath: /conf
             - name: gcp-wif-config
@@ -98,9 +108,6 @@ spec:
         - name: collector-config
           configMap:
             name: collector-config
-            items:
-              - key: collector.yaml
-                path: collector.yaml
         - name: gcp-wif-config
           configMap:
             name: gcp-wif-config
