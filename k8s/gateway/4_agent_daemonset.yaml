@@ -1,0 +1,109 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Node-local agent tier. Receives OTLP from workloads on its own node and
+# forwards to the gateway (the Deployment inherited from ../base).
+#
+# Every name and label here is suffixed with `-agent` so that this tier does not
+# collide with the gateway tier, and -- importantly -- so that the gateway's
+# Service selector (app: opentelemetry-collector) does not match these pods.
+# If it did, agents would round-robin their exports onto themselves.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: opentelemetry-collector-agent
+  namespace: opentelemetry
+  labels:
+    app: opentelemetry-collector-agent
+    app.kubernetes.io/component: agent
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry-collector-agent
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: opentelemetry-collector-agent
+        app.kubernetes.io/component: agent
+    spec:
+      # No serviceAccountName override: the agent runs k8sattributes in
+      # passthrough mode, so it makes no Kubernetes API calls and needs none of
+      # the base RBAC. It also never talks to Google, so it needs no credentials.
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: opentelemetry-collector
+          imagePullPolicy: Always
+          image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
+          args:
+            - "--config=/conf/agent-collector.yaml"
+            - "--feature-gates=exporter.googlemanagedprometheus.intToDouble,receiver.prometheusreceiver.RemoveStartTimeAdjustment"
+          ports:
+            # hostPort lets workloads reach their node-local agent at
+            # $(HOST_IP):4317 without a Service hop. Note that hostPort is
+            # rejected by GKE Autopilot and by restricted Pod Security Standards;
+            # on those clusters, drop these and have workloads send to the
+            # gateway Service directly.
+            - name: otlp-grpc
+              containerPort: 4317
+              hostPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              hostPort: 4318
+              protocol: TCP
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            # The gateway Service created by ../base. In-cluster DNS, so this is
+            # stable regardless of gateway pod churn or HPA scaling.
+            - name: GATEWAY_ENDPOINT
+              value: "opentelemetry-collector.opentelemetry.svc.cluster.local:4317"
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "200m"
+            limits:
+              memory: "400Mi"
+          volumeMounts:
+            - name: agent-collector-config
+              mountPath: /conf
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+      volumes:
+        - name: agent-collector-config
+          configMap:
+            name: agent-collector-config
+            items:
+              - key: agent-collector.yaml
+                path: agent-collector.yaml

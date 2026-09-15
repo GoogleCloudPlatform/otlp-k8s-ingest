@@ -13,24 +13,35 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: opentelemetry-collector
   namespace: opentelemetry
   labels:
     app: opentelemetry-collector
+    app.kubernetes.io/component: daemonset
 spec:
   selector:
     matchLabels:
       app: opentelemetry-collector
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
   template:
     metadata:
       labels:
         app: opentelemetry-collector
+        app.kubernetes.io/component: daemonset
     spec:
       serviceAccountName: opentelemetry-collector
-      securityContext:
-        {}
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: opentelemetry-collector
           imagePullPolicy: Always
@@ -52,6 +63,11 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.podIP
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
             - name: CONTROL_PLANE_ADDRESS
               value: "${CONTROL_PLANE_ADDRESS}"
             - name: FLEET_ID

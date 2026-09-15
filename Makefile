@@ -43,15 +43,16 @@ $(TOOLS)/kubectl: $(TOOLS)
 .PHONY: tools
 tools: $(JQ) $(YQ) $(KUBECTL)
 
+MANIFEST_DIRS ?= k8s/base/* k8s/gateway/* k8s/daemonset/*
 OTEL_COLLECTOR_VERSION ?= $(GBOC_VERSION)
 .PHONY: update-otel-version
 update-otel-version:
 	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" config/*; \
 	sed -i "s|GBOC_VERSION=[0-9.]\+|GBOC_VERSION=$(OTEL_COLLECTOR_VERSION)|g" VERSION; \
 	$(MAKE) generate; \
-	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_COLLECTOR_VERSION)\"|g" k8s/base/*; \
-	sed -i "s|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:[0-9.]\+|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*; \
-	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" k8s/base/*;
+	sed -i "s|app.kubernetes.io/version: \"[0-9.]\+\"|app.kubernetes.io/version: \"$(OTEL_COLLECTOR_VERSION)\"|g" $(MANIFEST_DIRS); \
+	sed -i "s|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:[0-9.]\+|us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:$(OTEL_COLLECTOR_VERSION)|g" $(MANIFEST_DIRS); \
+	sed -i "s|OpenTelemetry Collector Built By Google/[0-9.]\+|OpenTelemetry Collector Built By Google/$(OTEL_COLLECTOR_VERSION)|g" $(MANIFEST_DIRS);
 
 VERSION ?= $(MANIFESTS_VERSION)
 .PHONY: update-manifests-version
@@ -63,6 +64,7 @@ update-manifests-version:
 .PHONY: generate
 generate: tools
 	$(KUBECTL) create configmap collector-config -n opentelemetry --from-file=./config/collector.yaml -o yaml --dry-run > ./k8s/base/1_configmap.yaml
+	$(KUBECTL) create configmap agent-collector-config -n opentelemetry --from-file=./config/agent-collector.yaml -o yaml --dry-run > ./k8s/gateway/1_agent_configmap.yaml
 	$(YQ) -n 'load("config/collector.yaml") * load("test/collector.yaml")' > k8s/overlays/test/collector.yaml
 	cat test/fixtures/spans_input.json | $(JQ) -c > k8s/overlays/test/spans_fixture.json
 	cat test/fixtures/metrics_input.json | $(JQ) -c > k8s/overlays/test/metrics_fixture.json
