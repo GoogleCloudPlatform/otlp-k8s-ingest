@@ -77,7 +77,10 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/spans_output.json test/fixtures/spans_output.json || { touch /workspace/.failed; exit 1; }'
+  - |
+    [ ! -f /workspace/.failed ] && \
+    /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/spans_output.json test/fixtures/spans_output.json || \
+    { touch /workspace/.failed; exit 1; }
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -89,7 +92,10 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/metrics_output.json test/fixtures/metrics_output.json || { touch /workspace/.failed; exit 1; }'
+  - |
+    [ ! -f /workspace/.failed ] && \
+    /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/metrics_output.json test/fixtures/metrics_output.json || \
+    { touch /workspace/.failed; exit 1; }
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -101,7 +107,10 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json test/fixtures/self_metrics_output.json || { touch /workspace/.failed; exit 1; }'
+  - |
+    [ ! -f /workspace/.failed ] && \
+    /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json test/fixtures/self_metrics_output.json || \
+    { touch /workspace/.failed; exit 1; }
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -113,7 +122,10 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/logs_output.json test/fixtures/logs_output.json || { touch /workspace/.failed; exit 1; }'
+  - |
+    [ ! -f /workspace/.failed ] && \
+    /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/logs_output.json test/fixtures/logs_output.json || \
+    { touch /workspace/.failed; exit 1; }
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
