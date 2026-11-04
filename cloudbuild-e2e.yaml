@@ -32,21 +32,20 @@ steps:
 # create a GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: CreateCluster
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'container'
-  - 'clusters'
-  - 'create'
-  - '${TRIGGER_NAME}-${SHORT_SHA}'
-  - '--zone=${LOCATION}'
-  - '--num-nodes=1'
+  - '-c'
+  - 'gcloud container clusters create "${TRIGGER_NAME}-${SHORT_SHA}" --zone="${LOCATION}" --num-nodes=1 || { touch /workspace/.failed; exit 1; }'
 
 # deploy the manifests in GKE
 - name: 'gcr.io/cloud-builders/kubectl'
   id: Deploy
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'apply'
-  - '-k'
-  - './k8s/overlays/test'
+  - '-c'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash apply -k ./k8s/overlays/test || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -54,14 +53,11 @@ steps:
 # assert that all pods are up and running
 - name: 'gcr.io/cloud-builders/kubectl'
   id: AssertReady
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'wait'
-  - '--for=condition=Ready'
-  - '--timeout=300s'
-  - '-n'
-  - 'opentelemetry'
-  - 'pods'
-  - '--all'
+  - '-c'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash wait --for=condition=Ready --timeout=300s -n opentelemetry pods --all || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -69,21 +65,19 @@ steps:
 # Sleep long enough for one self-observability export interval
 - name: 'ubuntu'
   id: Wait for telemetry to be collected
+  allowFailure: true
   script: |
     #!/usr/bin/env bash
-    sleep 60
+    [ ! -f /workspace/.failed ] && sleep 60 || exit 1
 
 # Copy the span telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
   id: CopySpans
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'cp'
-  - '--retries'
-  - '3'
   - '-c'
-  - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/spans_output.json'
-  - 'test/fixtures/spans_output.json'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/spans_output.json test/fixtures/spans_output.json || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -91,14 +85,11 @@ steps:
 # Copy the metric telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
   id: CopyMetrics
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'cp'
-  - '--retries'
-  - '3'
   - '-c'
-  - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/metrics_output.json'
-  - 'test/fixtures/metrics_output.json'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/metrics_output.json test/fixtures/metrics_output.json || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -106,14 +97,11 @@ steps:
 # Copy the self-metric telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
   id: CopySelfMetrics
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'cp'
-  - '--retries'
-  - '3'
   - '-c'
-  - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json'
-  - 'test/fixtures/self_metrics_output.json'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/self_metrics_output.json test/fixtures/self_metrics_output.json || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -121,14 +109,11 @@ steps:
 # Copy the log telemetry out
 - name: 'gcr.io/cloud-builders/kubectl'
   id: CopyLogs
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'cp'
-  - '--retries'
-  - '3'
   - '-c'
-  - 'filecp'
-  - 'opentelemetry/opentelemetry-collector-0:/output/logs_output.json'
-  - 'test/fixtures/logs_output.json'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash cp --retries 3 -c filecp opentelemetry/opentelemetry-collector-0:/output/logs_output.json test/fixtures/logs_output.json || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -136,6 +121,7 @@ steps:
 # Print collector container logs for easy debugging.
 - name: 'gcr.io/cloud-builders/kubectl'
   id: Print container logs
+  allowFailure: true
   args:
   - 'logs'
   - 'opentelemetry-collector-0'
@@ -147,23 +133,27 @@ steps:
 
 - name: 'ubuntu'
   id: Prettify the output for easier diff
+  allowFailure: true
   script: |
     #!/usr/bin/env bash
+    [ ! -f /workspace/.failed ] || exit 1
     apt-get update && apt-get install -y build-essential curl
-    make prettify-fixture
+    make prettify-fixture || { touch /workspace/.failed; exit 1; }
 
 - name: bats/bats
   id: Check output
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'test/verify.bats'
+  - '-c'
+  - '[ ! -f /workspace/.failed ] && bats test/verify.bats || { touch /workspace/.failed; exit 1; }'
 
 # delete the GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: DeleteCluster
+  entrypoint: 'bash'
   args:
-  - 'container'
-  - 'clusters'
-  - 'delete'
-  - '${TRIGGER_NAME}-${SHORT_SHA}'
-  - '--zone=${LOCATION}'
-  - '--quiet'
+  - '-c'
+  - |
+    gcloud container clusters delete "${TRIGGER_NAME}-${SHORT_SHA}" --zone="${LOCATION}" --quiet || true
+    [ ! -f /workspace/.failed ]
