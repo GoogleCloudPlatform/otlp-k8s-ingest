@@ -19,8 +19,8 @@ exporters:
   # Note: In addition to per-request item limits (8,192 for logs/traces, 200 for
   # metrics), the API enforces a 5 MiB request size limit. An 8,192-item batch
   # stays under 5 MiB only when the average log or span is under ~640 bytes. If
-  # your payloads are larger, reduce `max_size` or additionally configure a
-  # queuebatch processor to batch by byte size.
+  # your payloads are larger, reduce `max_size` or set `sending_queue.batch.sizer: bytes`
+  # to batch by byte size.
   #
   # Docs:
   # https://github.com/open-telemetry/opentelemetry-collector/tree/main/exporter/otlpexporter
@@ -32,7 +32,7 @@ exporters:
     sending_queue:
       enabled: true
       sizer: bytes
-      queue_size: 104857600 # 100 MiB queue bound
+      queue_size: 10485760 # 10 MiB queue bound
       block_on_overflow: true
       num_consumers: 25
       batch:
@@ -48,7 +48,7 @@ exporters:
     sending_queue:
       enabled: true
       sizer: bytes
-      queue_size: 52428800 # 50 MiB queue bound
+      queue_size: 10485760 # 10 MiB queue bound
       block_on_overflow: true
       num_consumers: 25
       batch:
@@ -64,7 +64,7 @@ exporters:
     sending_queue:
       enabled: true
       sizer: bytes
-      queue_size: 104857600 # 100 MiB queue bound
+      queue_size: 10485760 # 10 MiB queue bound
       block_on_overflow: true
       num_consumers: 25
       batch:
@@ -93,7 +93,12 @@ processors:
           - otelcol_process_uptime
           - otelcol_process_memory_rss
           - otelcol_grpc_io_client_completed_rpcs
-          - otelcol_googlecloudmonitoring_point_count
+          - otelcol_exporter_sent_spans
+          - otelcol_exporter_sent_metric_points
+          - otelcol_exporter_sent_log_records
+          - otelcol_exporter_send_failed_spans
+          - otelcol_exporter_send_failed_metric_points
+          - otelcol_exporter_send_failed_log_records
   k8sattributes:
     extract:
       metadata:
