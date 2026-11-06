@@ -12,12 +12,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 exporters:
-  # The otlp exporter is used to send telemetry (logs, metrics, traces) to GCP Telemetry API using OTLP gRPC
-  otlp:
+  # Dedicated OTLP gRPC exporters are configured per signal (logs, metrics, traces)
+  # so each sending queue and batch size matches the Cloud Telemetry API quotas:
+  # https://docs.cloud.google.com/stackdriver/quotas
+  #
+  # Note: In addition to per-request item limits (8,192 for logs/traces, 200 for
+  # metrics), the API enforces a 5 MiB request size limit. An 8,192-item batch
+  # stays under 5 MiB only when the average log or span is under ~640 bytes. If
+  # your payloads are larger, reduce `max_size` or set `sending_queue.batch.sizer: bytes`
+  # to batch by byte size.
+  #
+  # Docs:
+  # https://github.com/open-telemetry/opentelemetry-collector/tree/main/exporter/otlpexporter
+  otlp/logs:
     endpoint: telemetry.googleapis.com:443
     balancer_name: pick_first
     auth:
       authenticator: googleclientauth
+    sending_queue:
+      enabled: true
+      sizer: bytes
+      queue_size: 10485760 # 10 MiB queue bound
+      block_on_overflow: true
+      num_consumers: 25
+      batch:
+        sizer: items
+        min_size: 8192
+        max_size: 8192
+        flush_timeout: 1s
+  otlp/metrics:
+    endpoint: telemetry.googleapis.com:443
+    balancer_name: pick_first
+    auth:
+      authenticator: googleclientauth
+    sending_queue:
+      enabled: true
+      sizer: bytes
+      queue_size: 10485760 # 10 MiB queue bound
+      block_on_overflow: true
+      num_consumers: 25
+      batch:
+        sizer: items
+        min_size: 200
+        max_size: 200
+        flush_timeout: 1s
+  otlp/traces:
+    endpoint: telemetry.googleapis.com:443
+    balancer_name: pick_first
+    auth:
+      authenticator: googleclientauth
+    sending_queue:
+      enabled: true
+      sizer: bytes
+      queue_size: 10485760 # 10 MiB queue bound
+      block_on_overflow: true
+      num_consumers: 25
+      batch:
+        sizer: items
+        min_size: 8192
+        max_size: 8192
+        flush_timeout: 1s
   file/spans:
     path: /output/spans_output.json
   file/metrics:
@@ -39,11 +93,12 @@ processors:
           - otelcol_process_uptime
           - otelcol_process_memory_rss
           - otelcol_grpc_io_client_completed_rpcs
-          - otelcol_googlecloudmonitoring_point_count
-  batch:
-    send_batch_max_size: 200
-    send_batch_size: 200
-    timeout: 5s
+          - otelcol_exporter_sent_spans
+          - otelcol_exporter_sent_metric_points
+          - otelcol_exporter_sent_log_records
+          - otelcol_exporter_send_failed_spans
+          - otelcol_exporter_send_failed_metric_points
+          - otelcol_exporter_send_failed_log_records
   k8sattributes:
     extract:
       metadata:
@@ -201,7 +256,6 @@ service:
         - resource/gcp_project_id
         - transform/otlp/preserve_instrumentation_source_version
         - transform/otlp/copy_service_resource_labels
-        - batch
       exporters:
         - file/logs
     metrics/otlp:
@@ -216,7 +270,6 @@ service:
         - transform/aco-gke
         - transform/unknown-counter
         - metricstarttime
-        - batch
       exporters:
         - file/metrics
     metrics/self-metrics:
@@ -229,7 +282,6 @@ service:
         - memory_limiter
         - resourcedetection
         - resource/gcp_project_id
-        - batch
       exporters:
         - file/self-metrics
     traces:
@@ -240,7 +292,6 @@ service:
         - memory_limiter
         - resourcedetection
         - resource/gcp_project_id
-        - batch
       exporters:
         - file/spans
   telemetry:
