@@ -25,20 +25,20 @@ steps:
 # create a GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: CreateCluster
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'container'
-  - 'clusters'
-  - 'create'
-  - '${TRIGGER_NAME}-${SHORT_SHA}'
-  - '--zone=${LOCATION}'
+  - '-c'
+  - 'gcloud container clusters create "${TRIGGER_NAME}-${SHORT_SHA}" --zone="${LOCATION}" || { touch /workspace/.failed; exit 1; }'
 
 # deploy the manifests in GKE
 - name: 'gcr.io/cloud-builders/kubectl'
   id: Deploy
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'apply'
-  - '-k'
-  - './k8s/base'
+  - '-c'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash apply -k ./k8s/base || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -46,14 +46,11 @@ steps:
 # assert that all pods are up and running
 - name: 'gcr.io/cloud-builders/kubectl'
   id: AssertReady
+  allowFailure: true
+  entrypoint: 'bash'
   args:
-  - 'wait'
-  - '--for=condition=Ready'
-  - '--timeout=300s'
-  - '-n'
-  - 'opentelemetry'
-  - 'pods'
-  - '--all'
+  - '-c'
+  - '[ ! -f /workspace/.failed ] && /builder/kubectl.bash wait --for=condition=Ready --timeout=300s -n opentelemetry pods --all || { touch /workspace/.failed; exit 1; }'
   env:
   - 'CLOUDSDK_COMPUTE_REGION=${LOCATION}'
   - 'CLOUDSDK_CONTAINER_CLUSTER=${TRIGGER_NAME}-${SHORT_SHA}'
@@ -61,10 +58,9 @@ steps:
 # delete the GKE cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   id: DeleteCluster
+  entrypoint: 'bash'
   args:
-  - 'container'
-  - 'clusters'
-  - 'delete'
-  - '${TRIGGER_NAME}-${SHORT_SHA}'
-  - '--zone=${LOCATION}'
-  - '--quiet'
+  - '-c'
+  - |
+    gcloud container clusters delete "${TRIGGER_NAME}-${SHORT_SHA}" --zone="${LOCATION}" --quiet || true
+    [ ! -f /workspace/.failed ]
