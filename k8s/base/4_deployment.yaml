@@ -36,6 +36,7 @@ spec:
           imagePullPolicy: Always
           image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.131.0
           args:
+            - "--config=googlecontrolplane:xds://${CONTROL_PLANE_ADDRESS}?gcp.fleet_id=${FLEET_ID}&project=${OPTIONAL_PROJECT_ID}"
             - "--config=/conf/collector.yaml"
             - "--feature-gates=exporter.googlemanagedprometheus.intToDouble,receiver.prometheusreceiver.RemoveStartTimeAdjustment"
           ports:
@@ -51,6 +52,14 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.podIP
+            - name: CONTROL_PLANE_ADDRESS
+              value: "${CONTROL_PLANE_ADDRESS}"
+            - name: FLEET_ID
+              value: "${FLEET_ID}"
+            - name: OPTIONAL_PROJECT_ID
+              value: "${OPTIONAL_PROJECT_ID}"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "${GOOGLE_APPLICATION_CREDENTIALS}"
           resources:
             requests:
               memory: "200Mi"
@@ -60,6 +69,12 @@ spec:
           volumeMounts:
             - name: collector-config
               mountPath: /conf
+            - name: gcp-wif-config
+              mountPath: /etc/gcp
+              readOnly: true
+            - name: gcp-ksa-token
+              mountPath: /var/run/secrets/tokens
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /
@@ -71,3 +86,14 @@ spec:
             items:
               - key: collector.yaml
                 path: collector.yaml
+        - name: gcp-wif-config
+          configMap:
+            name: gcp-wif-config
+            optional: true
+        - name: gcp-ksa-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: gcp-ksa-token
+                  expirationSeconds: 3600
+                  audience: //iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}
